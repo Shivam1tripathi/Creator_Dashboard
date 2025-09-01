@@ -2,14 +2,27 @@ import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
   {
-    name: {
+    firstName: {
       type: String,
       required: true,
+      trim: true,
+    },
+    lastName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    username: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
     },
     email: {
       type: String,
       unique: true,
       required: true,
+      lowercase: true,
     },
     password: {
       type: String,
@@ -26,16 +39,10 @@ const userSchema = new mongoose.Schema(
     },
     savedPosts: [
       {
-        title: String,
-        image: String,
-        link: String,
-      },
-    ],
-    reportedPosts: [
-      {
-        title: String,
-        image: String,
-        link: String,
+        post: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Post",
+        },
       },
     ],
     profileCompleted: {
@@ -49,10 +56,25 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
-    skills: {
+    phoneNumber: {
       type: String,
-      default: "",
     },
+    profilePicture: {
+      data: Buffer,
+      contentType: String,
+    },
+    followers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    following: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
   },
   { timestamps: true }
 );
