@@ -28,28 +28,17 @@ export const createPostController = async (req, res) => {
           .send({ message: "Content must be less than 50MB" });
     }
 
-    // Prepare directory to save files
-    const uploadDir = path.join(__dirname, "..", "uploads");
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir);
-    }
+    // Read file as binary
+    const fileData = fs.readFileSync(content.path);
 
-    // Generate unique filename to avoid conflicts
-    const fileExt = path.extname(content.name);
-    const uniqueFileName = `${uuidv4()}${fileExt}`;
-    const filePath = path.join(uploadDir, uniqueFileName);
-
-    // Move file from temp to uploads directory
-    fs.copyFileSync(content.path, filePath);
-
-    // Create post entry
+    // Save file directly in MongoDB
     const post = new Post({
       type,
       caption,
       tags: tags ? tags.split(",") : [],
       user: req.user._id,
       content: {
-        filePath: filePath,
+        data: fileData,
         contentType: content.type,
       },
     });
@@ -161,56 +150,21 @@ export const getAllPostsByUserController = async (req, res) => {
 export const getPostContentController = async (req, res) => {
   try {
     const id = req.params.pid;
-    if (!id)
+    if (!id) {
       return res
         .status(400)
         .send({ success: false, message: "Post ID is required" });
+    }
 
     const post = await Post.findById(id).select("content");
-    if (!post || !post.content || !post.content.filePath) {
+    if (!post || !post.content || !post.content.data) {
       return res
         .status(404)
         .send({ success: false, message: "Post content not found" });
     }
 
-    const filePath = path.resolve(post.content.filePath);
-    const contentType = post.content.contentType || "application/octet-stream";
-
-    if (!fs.existsSync(filePath)) {
-      return res
-        .status(404)
-        .send({ success: false, message: "File not found on server" });
-    }
-
-    const stat = fs.statSync(filePath);
-    const fileSize = stat.size;
-    const range = req.headers.range;
-
-    // Serve video or large files with range support
-    if (range && contentType.startsWith("video")) {
-      const parts = range.replace(/bytes=/, "").split("-");
-      const start = parseInt(parts[0], 10);
-      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
-      const chunkSize = end - start + 1;
-
-      const file = fs.createReadStream(filePath, { start, end });
-      const head = {
-        "Content-Range": `bytes ${start}-${end}/${fileSize}`,
-        "Accept-Ranges": "bytes",
-        "Content-Length": chunkSize,
-        "Content-Type": contentType,
-      };
-
-      res.writeHead(206, head);
-      file.pipe(res);
-    } else {
-      // For images or other files, send the entire content
-      res.writeHead(200, {
-        "Content-Length": fileSize,
-        "Content-Type": contentType,
-      });
-      fs.createReadStream(filePath).pipe(res);
-    }
+    res.set("Content-Type", post.content.contentType);
+    res.send(post.content.data);
   } catch (error) {
     console.error("Error streaming post content:", error);
     return res.status(500).send({

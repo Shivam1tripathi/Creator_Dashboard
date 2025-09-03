@@ -14,7 +14,7 @@ const postSchema = new mongoose.Schema(
       required: true,
     },
     content: {
-      filePath: String,
+      data: Buffer,
       contentType: String,
     },
     caption: {

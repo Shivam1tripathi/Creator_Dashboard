@@ -11,7 +11,7 @@ const CreatePost = () => {
   const [preview, setPreview] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
+  const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15 MB
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
