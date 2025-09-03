@@ -5,6 +5,8 @@ import { useAuth } from "../../context/AuthContext";
 import ProfileHeader from "../../components/ProfileHeader";
 import Gallery from "../../components/Gallery";
 
+const API = import.meta.env.VITE_API_URL; // ✅ use env
+
 const OtherProfile = () => {
   const { id: otherUserId } = useParams();
   const { user: currentUser } = useAuth();
@@ -18,14 +20,11 @@ const OtherProfile = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get(
-          `http://localhost:5000/api/user/single-user/${otherUserId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
+        const res = await axios.get(`${API}/user/single-user/${otherUserId}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
         setOtherUser(res.data.user);
         setIsFollowing(res.data.user.followers?.includes(currentUser.id));
       } catch (err) {
@@ -41,7 +40,7 @@ const OtherProfile = () => {
       try {
         setLoading(true);
         const { data } = await axios.get(
-          `http://localhost:5000/api/post/get-allpost/${otherUserId}`,
+          `${API}/post/get-allpost/${otherUserId}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -64,7 +63,7 @@ const OtherProfile = () => {
     try {
       setUpdatingFollow(true);
       await axios.post(
-        `http://localhost:5000/api/user/follow/${otherUserId}`,
+        `${API}/user/follow/${otherUserId}`,
         {},
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },

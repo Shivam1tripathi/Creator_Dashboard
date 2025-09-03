@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import Table from "../../components/Table";
 
+const API = import.meta.env.VITE_API_URL;
+
 const AdminPanel = () => {
   const [users, setUsers] = useState([]);
   const [totalCredits, setTotalCredits] = useState(0);
@@ -9,14 +11,11 @@ const AdminPanel = () => {
   useEffect(() => {
     const fetchAdminData = async () => {
       try {
-        const res = await axios.get(
-          "http://localhost:5000/api/admin/analytics",
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`, // or wherever you store the token
-            },
-          }
-        );
+        const res = await axios.get(`${API}/admin/analytics`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
         setUsers(res.data.users);
         setTotalCredits(res.data.totalCredits);
       } catch (err) {

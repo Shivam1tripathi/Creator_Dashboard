@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import PostCard from "../../components/PostCard";
 
+const API = import.meta.env.VITE_API_URL;
+
 const TrendingPage = () => {
   const [activeTab, setActiveTab] = useState("videos"); // "videos" | "photos"
   const [videos, setVideos] = useState([]);
@@ -15,15 +17,11 @@ const TrendingPage = () => {
       setError("");
 
       if (activeTab === "videos") {
-        const { data } = await axios.get(
-          "http://localhost:5000/api/post/trending-videos"
-        );
+        const { data } = await axios.get(`${API}/post/trending-videos`);
         if (data.success) setVideos(data.videos);
         else setError("Failed to load trending videos.");
       } else {
-        const { data } = await axios.get(
-          "http://localhost:5000/api/post/trending-photos"
-        );
+        const { data } = await axios.get(`${API}/post/trending-photos`);
         if (data.success) setPhotos(data.photos);
         else setError("Failed to load trending photos.");
       }

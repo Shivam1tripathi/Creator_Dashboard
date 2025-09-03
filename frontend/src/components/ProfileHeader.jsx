@@ -1,6 +1,9 @@
+// src/components/ProfileHeader.jsx
 import { useAuth } from "../context/AuthContext";
 import { useState } from "react";
 import axios from "axios";
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function ProfileHeader({
   singleuser,
@@ -8,12 +11,12 @@ export default function ProfileHeader({
   isFollowing,
   updatingFollow,
   toggleFollow,
-  onProfileUpdate, // optional callback to refresh parent
+  onProfileUpdate, // optional callback
 }) {
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, setUser } = useAuth();
   const profilePicId = singleuser?._id || currentUser?._id || currentUser?.id;
 
-  // Local state for edit modal
+  // State
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState({
     firstName: singleuser?.firstName || "",
@@ -21,30 +24,30 @@ export default function ProfileHeader({
     username: singleuser?.username || "",
     bio: singleuser?.bio || "",
     phoneNumber: singleuser?.phoneNumber || "",
-    profilePicture: null, // File object
+    profilePicture: null,
   });
   const [previewPic, setPreviewPic] = useState(
-    `http://localhost:5000/api/user/profile-picture/${profilePicId}`
+    `${API_URL}/user/profile-picture/${profilePicId}`
   );
   const [loading, setLoading] = useState(false);
   const [phoneError, setPhoneError] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
-  // Handle input changes
+  // Input change handler
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     if (name === "profilePicture" && files?.[0]) {
       const file = files[0];
       setFormData({ ...formData, profilePicture: file });
-      setPreviewPic(URL.createObjectURL(file)); // ✅ show preview
+      setPreviewPic(URL.createObjectURL(file));
     } else {
       setFormData({ ...formData, [name]: value });
     }
   };
 
-  // Submit profile update
+  // Profile update
   const handleUpdate = async () => {
-    if (phoneError) return; // don’t allow submit if phone invalid
+    if (phoneError) return;
 
     setLoading(true);
     setErrorMsg("");
@@ -54,15 +57,22 @@ export default function ProfileHeader({
         if (formData[key]) form.append(key, formData[key]);
       });
 
-      await axios.patch(`http://localhost:5000/api/user/update-profile`, form, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      const { data: updatedUser } = await axios.patch(
+        `${API_URL}/user/update-profile`,
+        form,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      // update auth context
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
 
       if (onProfileUpdate) onProfileUpdate();
       setEditing(false);
-      window.location.reload();
     } catch (err) {
       console.error("Profile update error:", err);
       setErrorMsg(
@@ -75,7 +85,7 @@ export default function ProfileHeader({
 
   return (
     <div className="bg-white shadow-md p-6 rounded-xl flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-6">
-      {/* Left Section: Avatar & Info */}
+      {/* Left: Avatar + Info */}
       <div className="flex items-center gap-5 w-full md:w-2/3">
         <img
           src={previewPic}
@@ -97,9 +107,8 @@ export default function ProfileHeader({
         </div>
       </div>
 
-      {/* Right Section: Stats + Follow/Edit */}
+      {/* Right: Stats + Button */}
       <div className="flex flex-col items-center md:items-end gap-3 w-full md:w-1/3">
-        {/* Stats */}
         <div className="flex justify-around w-full text-center">
           {[
             { label: "Followers", value: singleuser?.followers?.length || 0 },
@@ -117,7 +126,6 @@ export default function ProfileHeader({
           ))}
         </div>
 
-        {/* Follow / Edit */}
         {currentUser?._id !== singleuser?._id ? (
           <button
             onClick={toggleFollow}
@@ -149,18 +157,22 @@ export default function ProfileHeader({
         )}
       </div>
 
-      {/* Edit Profile Modal */}
+      {/* Edit Modal */}
       {editing && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+        <div
+          className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
+          onClick={() => setEditing(false)}
+        >
           <div
             className="bg-white p-6 mt-16 rounded-2xl shadow-2xl w-full max-w-md space-y-5 animate-fadeIn 
                   max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()} // prevent close on inside click
           >
             <h2 className="text-2xl font-bold text-gray-900 mb-4 text-center">
               ✨ Edit Profile
             </h2>
 
-            {/* Profile Picture Upload with Preview */}
+            {/* Profile Picture Upload */}
             <div className="flex flex-col items-center gap-3">
               <img
                 src={previewPic}
@@ -189,8 +201,7 @@ export default function ProfileHeader({
                 name="firstName"
                 value={formData.firstName}
                 onChange={handleChange}
-                placeholder="Enter first name"
-                className="w-full border border-gray-300 px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                className="w-full border border-gray-300 px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
               />
             </div>
 
@@ -204,8 +215,7 @@ export default function ProfileHeader({
                 name="lastName"
                 value={formData.lastName}
                 onChange={handleChange}
-                placeholder="Enter last name"
-                className="w-full border border-gray-300 px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                className="w-full border border-gray-300 px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
               />
             </div>
 
@@ -219,8 +229,7 @@ export default function ProfileHeader({
                 name="username"
                 value={formData.username}
                 onChange={handleChange}
-                placeholder="@username"
-                className="w-full border border-gray-300 px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                className="w-full border border-gray-300 px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
               />
             </div>
 
@@ -233,13 +242,12 @@ export default function ProfileHeader({
                 name="bio"
                 value={formData.bio}
                 onChange={handleChange}
-                placeholder="Write something about yourself..."
                 rows="3"
-                className="w-full border border-gray-300 px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                className="w-full border border-gray-300 px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
               />
             </div>
 
-            {/* Phone Number */}
+            {/* Phone */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">
                 Phone Number
@@ -250,18 +258,17 @@ export default function ProfileHeader({
                 value={formData.phoneNumber}
                 onChange={(e) => {
                   const value = e.target.value;
-                  if (/^[+]?\d{0,15}$/.test(value)) {
+                  if (/^[+]?\d{10,15}$/.test(value)) {
                     setFormData({ ...formData, phoneNumber: value });
                     setPhoneError("");
                   } else {
-                    setPhoneError("Enter a valid phone number");
+                    setPhoneError("Enter a valid phone number (10–15 digits)");
                   }
                 }}
-                placeholder="+91 9876543210"
                 className={`w-full border px-4 py-2 rounded-lg focus:ring-2 outline-none transition ${
                   phoneError
                     ? "border-red-500 focus:ring-red-500"
-                    : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                    : "border-gray-300 focus:ring-blue-500"
                 }`}
               />
               {phoneError && (
@@ -269,7 +276,6 @@ export default function ProfileHeader({
               )}
             </div>
 
-            {/* Error message */}
             {errorMsg && (
               <p className="text-red-600 text-sm text-center">{errorMsg}</p>
             )}
@@ -278,14 +284,14 @@ export default function ProfileHeader({
             <div className="flex justify-end gap-3 pt-4 sticky bottom-0 bg-white pb-2">
               <button
                 onClick={() => setEditing(false)}
-                className="px-5 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-medium"
+                className="px-5 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
               >
                 Cancel
               </button>
               <button
                 onClick={handleUpdate}
                 disabled={loading || !!phoneError}
-                className="px-5 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition font-medium disabled:opacity-50"
+                className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
               >
                 {loading ? (
                   <span className="flex items-center gap-2">

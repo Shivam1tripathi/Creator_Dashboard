@@ -4,29 +4,29 @@ import { useAuth } from "../../context/AuthContext";
 import { Send } from "lucide-react";
 import { io } from "socket.io-client";
 
+const API = import.meta.env.VITE_API_URL;
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
+
 export default function ConversationsPage() {
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedConv, setSelectedConv] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
-  const [onlineUsers, setOnlineUsers] = useState([]); // ✅ Track online users
+  const [onlineUsers, setOnlineUsers] = useState([]);
   const { user } = useAuth();
   const socket = useRef(null);
 
   // ✅ Initialize socket connection once
   useEffect(() => {
-    socket.current = io("http://localhost:5000");
+    socket.current = io(SOCKET_URL);
 
-    // Register user online
     socket.current.emit("addUser", user.id);
 
-    // Listen for all online users
     socket.current.on("getUsers", (users) => {
-      setOnlineUsers(users); // users = array of online userIds
+      setOnlineUsers(users);
     });
 
-    // Listen for messages
     socket.current.on("newMessage", (data) => {
       if (selectedConv?.participants.some((p) => p._id === data.senderId)) {
         setMessages((prev) => [
@@ -45,9 +45,7 @@ export default function ConversationsPage() {
   useEffect(() => {
     const fetchConversations = async () => {
       try {
-        const res = await axios.get(
-          `http://localhost:5000/api/conversations/${user.id}`
-        );
+        const res = await axios.get(`${API}/conversations/${user.id}`);
         setConversations(res.data);
       } catch (error) {
         console.error("Error fetching conversations:", error);
@@ -65,9 +63,9 @@ export default function ConversationsPage() {
     const fetchMessages = async () => {
       try {
         const res = await axios.get(
-          `http://localhost:5000/api/messages/${selectedConv._id}?page=1&limit=20`
+          `${API}/messages/${selectedConv._id}?page=1&limit=20`
         );
-        setMessages(res.data.messages); // oldest first
+        setMessages(res.data.messages);
       } catch (error) {
         console.error("Error fetching messages:", error);
       }
@@ -81,7 +79,7 @@ export default function ConversationsPage() {
     if (!newMessage.trim() || !selectedConv) return;
 
     try {
-      const res = await axios.post("http://localhost:5000/api/messages", {
+      const res = await axios.post(`${API}/messages`, {
         conversationId: selectedConv._id,
         sender: user.id,
         text: newMessage,
@@ -90,12 +88,10 @@ export default function ConversationsPage() {
       const sentMessage = res.data;
       setMessages((prev) => [...prev, sentMessage]);
 
-      // Get receiverId
       const receiverId = selectedConv.participants.find(
         (p) => p._id !== user.id
       )._id;
 
-      // Send real-time
       socket.current.emit("sendMessage", {
         senderId: user.id,
         receiverId,
@@ -126,7 +122,7 @@ export default function ConversationsPage() {
         <ul className="space-y-2 p-3">
           {conversations.map((conv) => {
             const otherUser = conv.participants.find((p) => p._id !== user.id);
-            const isOnline = onlineUsers.includes(otherUser._id); // ✅ Check online
+            const isOnline = onlineUsers.includes(otherUser._id);
 
             return (
               <li
@@ -140,11 +136,10 @@ export default function ConversationsPage() {
               >
                 <div className="relative">
                   <img
-                    src={`http://localhost:5000/api/user/profile-picture/${otherUser._id}`}
+                    src={`${API}/user/profile-picture/${otherUser._id}`}
                     alt={otherUser?.firstName}
                     className="w-12 h-12 rounded-full object-cover border"
                   />
-                  {/* ✅ Online status dot */}
                   <span
                     className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 ${
                       isOnline
@@ -182,7 +177,6 @@ export default function ConversationsPage() {
       <div className="flex-1 flex flex-col">
         {selectedConv ? (
           <>
-            {/* Messages */}
             <div className="flex-1 p-6 overflow-y-auto space-y-3">
               {messages.map((msg, index) => (
                 <div
@@ -206,7 +200,6 @@ export default function ConversationsPage() {
               ))}
             </div>
 
-            {/* Input */}
             <div className="p-4 border-t bg-white flex items-center">
               <input
                 type="text"

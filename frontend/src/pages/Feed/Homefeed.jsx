@@ -4,6 +4,8 @@ import PostCard from "../../components/PostCard";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
+const API = import.meta.env.VITE_API_URL;
+
 const Homefeed = () => {
   const [posts, setPosts] = useState([]);
   const { user: currentUser } = useAuth();
@@ -24,7 +26,6 @@ const Homefeed = () => {
     try {
       const config = {};
 
-      // If logged in, send token so backend can personalize feed
       if (localStorage.getItem("token")) {
         config.headers = {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -32,7 +33,7 @@ const Homefeed = () => {
       }
 
       const { data } = await axios.get(
-        `http://localhost:5000/api/feed/paginated?page=${page}&limit=3`,
+        `${API}/feed/paginated?page=${page}&limit=3`,
         config
       );
 
@@ -48,12 +49,9 @@ const Homefeed = () => {
   /* ---------------- Fetch Suggested Users ---------------- */
   const fetchSuggestedUsers = async () => {
     try {
-      const { data } = await axios.get(
-        `http://localhost:5000/api/user/suggested-users`,
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        }
-      );
+      const { data } = await axios.get(`${API}/user/suggested-users`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
       setSuggestedUsers(data.suggestions || []);
     } catch (err) {
       console.error("Error fetching suggested users:", err);
@@ -63,12 +61,9 @@ const Homefeed = () => {
   /* ---------------- Fetch Top Users ---------------- */
   const fetchTopUsers = async () => {
     try {
-      const { data } = await axios.get(
-        `http://localhost:5000/api/user/top-followed`,
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        }
-      );
+      const { data } = await axios.get(`${API}/user/top-followed`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
       setTopUsers(data.users || []);
     } catch (err) {
       console.error("Error fetching top users:", err);
@@ -80,14 +75,13 @@ const Homefeed = () => {
     try {
       setUpdatingFollowId(userId);
       const { data } = await axios.post(
-        `http://localhost:5000/api/user/follow/${userId}`,
+        `${API}/user/follow/${userId}`,
         {},
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
       );
 
-      // Optimistic update
       if (listType === "suggested") {
         setSuggestedUsers((prev) => prev.filter((u) => u._id !== userId));
       } else if (listType === "top") {
@@ -124,7 +118,7 @@ const Homefeed = () => {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 px-4 py-6 max-w-7xl mx-auto">
-      {/* Left Sidebar - Sticky Navigation */}
+      {/* Left Sidebar */}
       <aside className="hidden lg:flex flex-col space-y-4 p-5 bg-white/90 backdrop-blur rounded-xl shadow-xl h-fit sticky top-20 self-start">
         <h3 className="text-lg font-bold border-b pb-2 text-gray-800 flex items-center gap-2">
           📌 Navigation
@@ -173,7 +167,7 @@ const Homefeed = () => {
         )}
       </main>
 
-      {/* Right Sidebar - Sticky Suggested & Top Users */}
+      {/* Right Sidebar */}
       <aside className="hidden lg:block space-y-6 p-5 bg-white/90 backdrop-blur rounded-xl shadow-xl h-fit sticky top-20 self-start">
         {/* Suggested Users */}
         <section>
@@ -196,7 +190,7 @@ const Homefeed = () => {
                     className="flex items-center gap-3"
                   >
                     <img
-                      src={`http://localhost:5000/api/user/profile-picture/${user._id}`}
+                      src={`${API}/user/profile-picture/${user._id}`}
                       className="w-10 h-10 rounded-full object-cover border"
                       alt={user.username}
                     />
@@ -258,14 +252,12 @@ const Homefeed = () => {
                         {index + 1}
                       </span>
 
-                      {/* Profile Picture */}
                       <img
-                        src={`http://localhost:5000/api/user/profile-picture/${user._id}`}
+                        src={`${API}/user/profile-picture/${user._id}`}
                         className="w-9 h-9 rounded-full object-cover border"
                         alt={user.username}
                       />
 
-                      {/* User Info */}
                       <div>
                         <span className="block text-sm font-semibold text-gray-800">
                           {currentUser.id !== user._id
@@ -280,7 +272,6 @@ const Homefeed = () => {
                       </div>
                     </div>
 
-                    {/* Follow Button */}
                     {currentUser.id !== user._id && (
                       <button
                         onClick={(e) => {

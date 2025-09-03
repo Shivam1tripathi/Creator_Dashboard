@@ -3,6 +3,8 @@ import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 import { Link } from "react-router-dom";
 
+const API = import.meta.env.VITE_API_URL;
+
 const ExploreSection = () => {
   const { user: currentUser } = useAuth();
   const [query, setQuery] = useState("");
@@ -10,41 +12,39 @@ const ExploreSection = () => {
   const [results, setResults] = useState([]);
   const [followMap, setFollowMap] = useState({});
   const [loading, setLoading] = useState(false);
-  const [suggestedUsers, setSuggestedUsers] = useState([]); // ✅ New state
+  const [suggestedUsers, setSuggestedUsers] = useState([]);
 
-  // ✅ Fetch Suggested Users
+  /* ---------------- Fetch Suggested Users ---------------- */
   const fetchSuggestedUsers = async () => {
     try {
-      const { data } = await axios.get(
-        `http://localhost:5000/api/user/suggested-users`,
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        }
-      );
+      const { data } = await axios.get(`${API}/user/suggested-users`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
       setSuggestedUsers(data.suggestions || []);
     } catch (err) {
       console.error("Error fetching suggested users:", err);
     }
   };
 
-  // Run once on mount
   useEffect(() => {
     fetchSuggestedUsers();
   }, []);
 
-  // ✅ Search Handler
+  /* ---------------- Search Handler ---------------- */
   const handleSearch = async () => {
     if (!query.trim()) return;
     setLoading(true);
     try {
       const endpoint =
         type === "users"
-          ? `http://localhost:5000/api/user/search-users?q=${query}`
-          : `http://localhost:5000/api/post/search-posts?q=${query}`;
+          ? `${API}/user/search-users?q=${query}`
+          : `${API}/post/search-posts?q=${query}`;
+
       const { data } = await axios.get(endpoint);
       const list = type === "users" ? data.users : data.posts;
       setResults(list);
       setFollowMap({});
+
       if (type === "users" && currentUser) await prefetchFollowStatus(list);
     } catch (err) {
       console.error("Search error:", err);
@@ -54,7 +54,7 @@ const ExploreSection = () => {
     }
   };
 
-  // ✅ Prefetch follow status
+  /* ---------------- Prefetch Follow Status ---------------- */
   const prefetchFollowStatus = async (users) => {
     const map = {};
     await Promise.all(
@@ -62,7 +62,7 @@ const ExploreSection = () => {
         if (u._id === currentUser._id) return (map[u._id] = false);
         try {
           const { data } = await axios.get(
-            `http://localhost:5000/api/user/is-following/${currentUser.id}/${u._id}`
+            `${API}/user/is-following/${currentUser.id}/${u._id}`
           );
           map[u._id] = data.isFollowing;
         } catch {
@@ -73,11 +73,11 @@ const ExploreSection = () => {
     setFollowMap(map);
   };
 
-  // ✅ Toggle Follow
+  /* ---------------- Toggle Follow ---------------- */
   const toggleFollow = async (targetId) => {
     try {
       await axios.post(
-        `http://localhost:5000/api/user/follow/${targetId}`,
+        `${API}/user/follow/${targetId}`,
         {},
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -151,7 +151,7 @@ const ExploreSection = () => {
                   className="flex items-center gap-4"
                 >
                   <img
-                    src={`http://localhost:5000/api/user/profile-picture/${u._id}`}
+                    src={`${API}/user/profile-picture/${u._id}`}
                     alt={u.username}
                     className="w-14 h-14 rounded-full object-cover border"
                   />
@@ -209,7 +209,7 @@ const ExploreSection = () => {
         </div>
       )}
 
-      {/* ✅ Suggested Users Section */}
+      {/* Suggested Users Section */}
       {suggestedUsers.length > 0 && (
         <div className="mt-10">
           <h2 className="text-xl font-bold mb-4 text-gray-700">
@@ -226,7 +226,7 @@ const ExploreSection = () => {
                   className="flex items-center gap-4"
                 >
                   <img
-                    src={`http://localhost:5000/api/user/profile-picture/${u._id}`}
+                    src={`${API}/user/profile-picture/${u._id}`}
                     alt={u.username}
                     className="w-12 h-12 rounded-full object-cover border"
                   />

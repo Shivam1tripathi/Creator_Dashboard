@@ -3,6 +3,8 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import PostCard from "../../components/PostCard";
 
+const API = import.meta.env.VITE_API_URL; // ✅ use env base URL
+
 const PostDetails = () => {
   const { id } = useParams(); // post id from route
   const [post, setPost] = useState(null);
@@ -11,16 +13,13 @@ const PostDetails = () => {
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        const data = await axios.get(
-          `http://localhost:5000/api/post/get-singlepost/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
-        console.log("single" + data.data.post);
-        setPost(data.data.post);
+        const { data } = await axios.get(`${API}/post/get-singlepost/${id}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+        console.log("Fetched single post:", data.post);
+        setPost(data.post);
       } catch (err) {
         console.error("Error loading post:", err);
       } finally {

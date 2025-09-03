@@ -4,6 +4,8 @@ import axios from "axios";
 import Input from "../../components/Input";
 import Button from "../../components/Button";
 
+const API = import.meta.env.VITE_API_URL;
+
 const Login = () => {
   const { login } = useAuth();
   const [form, setForm] = useState({ email: "", password: "" });
@@ -18,10 +20,7 @@ const Login = () => {
     setLoading(true);
     setError("");
     try {
-      const { data } = await axios.post(
-        "http://localhost:5000/api/auth/login",
-        form
-      );
+      const { data } = await axios.post(`${API}/auth/login`, form);
       login(data);
     } catch (err) {
       setError(

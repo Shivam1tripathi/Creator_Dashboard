@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
+const API = import.meta.env.VITE_API_URL; // ✅ base API from .env
+
 export default function SavedPosts() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -11,14 +13,11 @@ export default function SavedPosts() {
   useEffect(() => {
     const fetchSavedPosts = async () => {
       try {
-        const { data } = await axios.get(
-          "http://localhost:5000/api/user/saved",
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
+        const { data } = await axios.get(`${API}/user/saved`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
         setPosts(data.posts);
       } catch (error) {
         console.error("Error fetching saved posts:", error);
@@ -58,12 +57,12 @@ export default function SavedPosts() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.05 }}
-            className="bg-white rounded-2xl shadow-md cursor-pointer overflow-hidden hover:shadow-lg transition duration-300 cursor-pointer"
-            onClick={() => navigate(`/post/${post._id}`)} // 👈 Navigate to detail page
+            className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition duration-300 cursor-pointer"
+            onClick={() => navigate(`/post/${post._id}`)}
           >
             {post.type === "image" && (
               <img
-                src={`http://localhost:5000/api/post/post-content/${post._id}`}
+                src={`${API}/post/post-content/${post._id}`}
                 alt={post.caption}
                 className="w-full h-56 object-cover"
                 loading="lazy"
@@ -71,7 +70,7 @@ export default function SavedPosts() {
             )}
             {post.type === "video" && (
               <video
-                src={`http://localhost:5000/api/post/post-content/${post._id}`}
+                src={`${API}/post/post-content/${post._id}`}
                 className="w-full h-56 object-cover"
                 controls
               />

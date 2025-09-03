@@ -3,6 +3,8 @@ import { useAuth } from "../context/AuthContext";
 import { useEffect, useRef, useState } from "react";
 import { Menu, X } from "lucide-react";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export default function Navbar() {
   const { user, logout } = useAuth();
   const location = useLocation();
@@ -23,9 +25,17 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleMenuClick = () => {
-    setTimeout(() => setDropdownOpen(false), 50);
-  };
+  // Close dropdown & mobile menu on route change
+  useEffect(() => {
+    setDropdownOpen(false);
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
+
+  const navLinks = [
+    { path: "/", label: "Home" },
+    { path: "/explore", label: "Explore" },
+    { path: "/create-Post", label: "Create Post" },
+  ];
 
   return (
     <nav className="bg-gray-900/90 backdrop-blur-lg shadow-md border-b border-gray-800 fixed top-0 left-0 right-0 z-50">
@@ -42,9 +52,9 @@ export default function Navbar() {
         <div className="hidden md:flex items-center gap-6 relative">
           {user ? (
             <>
-              {["/", "/explore", "/create-Post"].map((path, idx) => (
+              {navLinks.map(({ path, label }) => (
                 <Link
-                  key={idx}
+                  key={path}
                   to={path}
                   className={`text-sm font-medium transition-colors duration-200 ${
                     isActive(path)
@@ -52,11 +62,7 @@ export default function Navbar() {
                       : "text-gray-300 hover:text-white"
                   }`}
                 >
-                  {path === "/"
-                    ? "Home"
-                    : path === "/explore"
-                    ? "Explore"
-                    : "Create Post"}
+                  {label}
                 </Link>
               ))}
 
@@ -76,33 +82,28 @@ export default function Navbar() {
                   className="flex items-center focus:outline-none cursor-pointer"
                 >
                   <img
-                    src={`http://localhost:5000/api/user/profile-picture/${user.id}`}
+                    src={`${API_URL}/user/profile-picture/${user.id}`}
                     alt="User Avatar"
                     className="w-10 h-10 rounded-full border-2 border-purple-400 hover:ring-2 hover:ring-purple-500 transition"
                   />
                 </button>
 
                 {dropdownOpen && (
-                  <div className="absolute right-0 mt-3 w-52 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-[2000] overflow-hidden animate-fadeIn">
+                  <div className="absolute right-0 mt-3 w-52 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-[2000] animate-fadeInScale">
                     <Link
                       to="/dashboard"
-                      onClick={handleMenuClick}
                       className="block px-5 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white"
                     >
                       Dashboard
                     </Link>
                     <Link
                       to="/myprofile"
-                      onClick={handleMenuClick}
                       className="block px-5 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white"
                     >
                       My Profile
                     </Link>
                     <button
-                      onClick={() => {
-                        logout();
-                        setDropdownOpen(false);
-                      }}
+                      onClick={logout}
                       className="w-full text-left px-5 py-2 text-sm text-red-400 hover:bg-gray-700 hover:text-red-300"
                     >
                       Logout
@@ -110,6 +111,7 @@ export default function Navbar() {
                   </div>
                 )}
               </div>
+
               <Link
                 to="/conversation-list"
                 className="px-3 py-1 rounded-full bg-orange-500/20 text-orange-400 font-semibold hover:bg-orange-500/30 transition"
@@ -154,46 +156,36 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-gray-900 border-t border-gray-800 px-6 py-4 space-y-3">
+        <div className="md:hidden bg-gray-900 border-t border-gray-800 px-6 py-4 space-y-3 animate-slideDown">
           {user ? (
             <>
-              {["/", "/explore", "/create-Post"].map((path, idx) => (
+              {navLinks.map(({ path, label }) => (
                 <Link
-                  key={idx}
+                  key={path}
                   to={path}
                   className={`block text-sm font-medium ${
                     isActive(path)
                       ? "text-purple-400"
                       : "text-gray-300 hover:text-white"
                   }`}
-                  onClick={() => setMobileMenuOpen(false)}
                 >
-                  {path === "/"
-                    ? "Home"
-                    : path === "/explore"
-                    ? "Explore"
-                    : "Create Post"}
+                  {label}
                 </Link>
               ))}
               <Link
                 to="/dashboard"
                 className="block text-sm text-gray-300 hover:text-white"
-                onClick={() => setMobileMenuOpen(false)}
               >
                 Dashboard
               </Link>
               <Link
                 to="/myprofile"
                 className="block text-sm text-gray-300 hover:text-white"
-                onClick={() => setMobileMenuOpen(false)}
               >
                 My Profile
               </Link>
               <button
-                onClick={() => {
-                  logout();
-                  setMobileMenuOpen(false);
-                }}
+                onClick={logout}
                 className="text-sm text-red-400 hover:text-red-300"
               >
                 Logout
@@ -208,7 +200,6 @@ export default function Navbar() {
                     ? "text-purple-400"
                     : "text-gray-300 hover:text-white"
                 }`}
-                onClick={() => setMobileMenuOpen(false)}
               >
                 Login
               </Link>
@@ -219,7 +210,6 @@ export default function Navbar() {
                     ? "text-purple-400"
                     : "text-gray-300 hover:text-white"
                 }`}
-                onClick={() => setMobileMenuOpen(false)}
               >
                 Register
               </Link>

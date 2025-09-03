@@ -11,13 +11,15 @@ import { FiSend } from "react-icons/fi";
 import PostCommentSection from "./PostCommentSection";
 import { Link } from "react-router-dom";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const PostCard = ({ post }) => {
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
   const [expanded, setExpanded] = useState(false);
   const [saved, setSaved] = useState(false);
   const [user, setUser] = useState();
-  const [object, setObject] = useState("contain");
+  const [objectFit, setObjectFit] = useState("contain");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,19 +30,14 @@ const PostCard = ({ post }) => {
         };
 
         const [likesRes, savedRes, likedRes, userRes] = await Promise.all([
-          axios.get(`http://localhost:5000/api/post/likes/${post._id}`),
-          axios.get(`http://localhost:5000/api/user/is-saved/${post._id}`, {
-            headers,
-          }),
+          axios.get(`${API_URL}/post/likes/${post._id}`),
+          axios.get(`${API_URL}/user/is-saved/${post._id}`, { headers }),
           axios.post(
-            `http://localhost:5000/api/post/is-liked`,
+            `${API_URL}/post/is-liked`,
             { postId: post._id },
             { headers }
           ),
-          axios.get(`http://localhost:5000/api/post/get-user/${post._id}`, {
-            headers,
-            withCredentials: true,
-          }),
+          axios.get(`${API_URL}/post/get-user/${post._id}`, { headers }),
         ]);
 
         setLikesCount(likesRes.data.likesCount);
@@ -57,34 +54,44 @@ const PostCard = ({ post }) => {
   }, [post._id]);
 
   const toggleLike = async () => {
+    setLiked((prev) => !prev);
+    setLikesCount((prev) => (liked ? prev - 1 : prev + 1));
+
     try {
-      setLiked((prev) => !prev);
       const { data } = await axios.post(
-        `http://localhost:5000/api/post/like/${post._id}`,
+        `${API_URL}/post/like/${post._id}`,
         {},
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
       );
-      if (data.success === false) setLiked((prev) => !prev);
-      setLikesCount(data.totalLikes);
+      if (data.success === false) {
+        // rollback
+        setLiked((prev) => !prev);
+        setLikesCount(data.totalLikes);
+      } else {
+        setLikesCount(data.totalLikes);
+      }
     } catch (error) {
       console.error("Failed to like/unlike post:", error);
+      setLiked((prev) => !prev); // rollback
+      setLikesCount((prev) => (liked ? prev + 1 : prev - 1));
     }
   };
 
   const toggleSave = async () => {
+    setSaved((prev) => !prev); // optimistic update
     try {
       await axios.post(
-        `http://localhost:5000/api/user/save-post`,
+        `${API_URL}/user/save-post`,
         { postId: post._id },
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
       );
-      setSaved((prev) => !prev);
     } catch (error) {
       console.error("Failed to save/unsave post:", error);
+      setSaved((prev) => !prev); // rollback
     }
   };
 
@@ -104,7 +111,7 @@ const PostCard = ({ post }) => {
       <div className="flex items-center justify-between p-3 border-b border-gray-100">
         <Link to={`/profile/${user._id}`} className="flex items-center gap-3">
           <img
-            src={`http://localhost:5000/api/user/profile-picture/${
+            src={`${API_URL}/user/profile-picture/${
               post?.user._id || post?.user
             }`}
             alt="avatar"
@@ -121,18 +128,18 @@ const PostCard = ({ post }) => {
       <div
         className="w-full h-80 bg-gray-100 cursor-pointer group"
         onClick={() =>
-          setObject((prev) => (prev === "cover" ? "contain" : "cover"))
+          setObjectFit((prev) => (prev === "cover" ? "contain" : "cover"))
         }
       >
         {post.type === "image" ? (
           <img
-            src={`http://localhost:5000/api/post/post-content/${post._id}`}
+            src={`${API_URL}/post/post-content/${post._id}`}
             alt="post"
-            className={`h-full w-full object-${object} transition-all duration-300`}
+            className={`h-full w-full object-${objectFit} transition-all duration-300`}
           />
         ) : (
           <video
-            src={`http://localhost:5000/api/post/post-content/${post._id}`}
+            src={`${API_URL}/post/post-content/${post._id}`}
             controls
             className="h-full w-full object-contain"
           />
@@ -167,6 +174,7 @@ const PostCard = ({ post }) => {
           {saved ? <FaBookmark className="text-blue-600" /> : <FaRegBookmark />}
         </button>
       </div>
+
       {/* Caption */}
       <div className="px-4 pb-2 text-sm text-gray-700">
         <span className="font-semibold">{user?.username} </span>

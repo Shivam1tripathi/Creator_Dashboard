@@ -5,6 +5,7 @@ import Input from "../../components/Input";
 import Button from "../../components/Button";
 
 let usernameTimer;
+const API = import.meta.env.VITE_API_URL;
 
 const Register = () => {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ const Register = () => {
 
   const [usernameError, setUsernameError] = useState("");
   const [checkingUsername, setCheckingUsername] = useState(false);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -42,10 +44,8 @@ const Register = () => {
   const checkUsername = async (username) => {
     if (!username) return;
     try {
-      await axios.post("http://localhost:5000/api/auth/uniqueusername", {
-        username,
-      });
-      setUsernameError(""); // Username is available
+      await axios.post(`${API}/auth/uniqueusername`, { username });
+      setUsernameError(""); // ✅ available
     } catch (err) {
       setUsernameError(err.response?.data?.msg || "Username not available");
     } finally {
@@ -59,21 +59,16 @@ const Register = () => {
 
     try {
       const formData = new FormData();
-      // append text fields
       Object.entries(form).forEach(([key, value]) => {
         formData.append(key, value);
       });
 
-      const { data } = await axios.post(
-        "http://localhost:5000/api/auth/register",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
+      const { data } = await axios.post(`${API}/auth/register`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
 
       if (data.result === true) {
         navigate("/login");
@@ -91,7 +86,6 @@ const Register = () => {
 
       {/* Register Card */}
       <div className="w-full max-w-lg bg-white/10 backdrop-blur-lg border border-white/20 shadow-2xl p-8 rounded-2xl">
-        {/* Header */}
         <h2 className="text-3xl font-bold text-white text-center mb-2">
           Create an Account
         </h2>
@@ -204,7 +198,6 @@ const Register = () => {
             </label>
           </div>
 
-          {/* Submit Button */}
           <Button
             type="submit"
             disabled={!!usernameError}
@@ -214,7 +207,6 @@ const Register = () => {
           </Button>
         </form>
 
-        {/* Footer */}
         <p className="text-center text-gray-300 text-sm mt-4">
           Already have an account?{" "}
           <a href="/login" className="text-purple-300 hover:underline">

@@ -3,6 +3,8 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
+const API = import.meta.env.VITE_API_URL;
+
 const CompleteProfile = () => {
   const [bio, setBio] = useState("");
   const [profilePicture, setProfilePicture] = useState(null);
@@ -23,7 +25,7 @@ const CompleteProfile = () => {
       if (profilePicture) formData.append("profilePicture", profilePicture);
 
       const response = await axios.post(
-        "http://localhost:5000/api/user/complete-profile",
+        `${API}/user/complete-profile`,
         formData,
         {
           headers: {
@@ -46,7 +48,6 @@ const CompleteProfile = () => {
       navigate("/dashboard");
     } catch (err) {
       console.error("Profile completion error:", err);
-      // Optionally, check for error response and show more detail
       if (err.response) {
         alert(`Error: ${err.response.data.msg || "Something went wrong"}`);
       } else {
@@ -67,7 +68,6 @@ const CompleteProfile = () => {
           encType="multipart/form-data"
           className="space-y-6"
         >
-          {/* Textarea with a disappearing placeholder */}
           <textarea
             id="bio"
             placeholder="Write a short bio..."
@@ -78,7 +78,6 @@ const CompleteProfile = () => {
             className="w-full border border-gray-300 rounded-md p-4 resize-none focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent"
           />
 
-          {/* Custom styled file input */}
           <div>
             <label
               htmlFor="profilePicture"
