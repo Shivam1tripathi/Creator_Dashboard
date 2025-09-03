@@ -5,7 +5,7 @@ import cookieParser from "cookie-parser";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import connectDB from "./config/db.js";
-
+import { fileURLToPath } from "url";
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
@@ -13,6 +13,7 @@ import feedRoutes from "./routes/feedRoutes.js";
 import postRoutes from "./routes/postRoutes.js";
 import conversationRoutes from "./routes/conversationRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
+import path from "path";
 
 dotenv.config();
 
@@ -27,6 +28,12 @@ const allowedOrigins = [
   process.env.ALLOW_ORIGIN_URL || "http://localhost:5173",
 ];
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// 👉 Serve frontend build
+app.use(express.static(path.join(__dirname, "dist")));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use(
   cors({
     origin: function (origin, callback) {
