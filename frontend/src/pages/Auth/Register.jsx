@@ -158,13 +158,32 @@ const Register = () => {
                 name="phone"
                 type="tel"
                 value={form.phone}
-                onChange={handleChange}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  // ✅ Allow only digits and max 10
+                  if (/^\d{0,10}$/.test(value)) {
+                    setForm({ ...form, phone: value });
+                  }
+                }}
                 placeholder=" "
-                className="peer w-full px-3 pt-5 pb-2 rounded-lg bg-white/5 border border-gray-500/30 text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-500 outline-none"
+                className={`peer w-full px-3 pt-5 pb-2 rounded-lg bg-white/5 border 
+      ${
+        form.phone && form.phone.length !== 10
+          ? "border-red-400"
+          : "border-gray-500/30"
+      } 
+      text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-500 outline-none`}
               />
               <label className="absolute left-3 top-2 text-gray-400 text-xs transition-all peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm peer-placeholder-shown:text-gray-500 peer-focus:top-2 peer-focus:text-xs peer-focus:text-purple-400">
                 Phone Number
               </label>
+
+              {/* Error message */}
+              {form.phone && form.phone.length !== 10 && (
+                <span className="text-xs text-red-400 mt-1 block">
+                  Phone number must be 10 digits
+                </span>
+              )}
             </div>
           </div>
 

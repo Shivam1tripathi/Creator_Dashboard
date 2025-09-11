@@ -14,6 +14,8 @@ export default function ConversationsPage() {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [onlineUsers, setOnlineUsers] = useState([]);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [updatingFollowId, setUpdatingFollowId] = useState(null);
   const { user } = useAuth();
   const socket = useRef(null);
 
@@ -72,7 +74,18 @@ export default function ConversationsPage() {
     };
 
     fetchMessages();
-  }, [selectedConv]);
+
+    // also fetch follow status for selected user
+    const otherUser = selectedConv.participants.find((p) => p._id !== user.id);
+    if (otherUser) {
+      axios
+        .get(`${API}/user/is-following/${user.id}/${otherUser._id}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        })
+        .then((res) => setIsFollowing(res.data.isFollowing))
+        .catch((err) => console.error("Error fetching follow status:", err));
+    }
+  }, [selectedConv, user.id]);
 
   // ✅ Send message
   const handleSend = async () => {
@@ -101,6 +114,25 @@ export default function ConversationsPage() {
       setNewMessage("");
     } catch (error) {
       console.error("Error sending message:", error);
+    }
+  };
+
+  // ✅ Toggle Follow
+  const toggleFollow = async (userId) => {
+    try {
+      setUpdatingFollowId(userId);
+      const { data } = await axios.post(
+        `${API}/user/follow/${userId}`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        }
+      );
+      setIsFollowing(data.isFollowing);
+    } catch (err) {
+      console.error("Follow/unfollow error:", err);
+    } finally {
+      setUpdatingFollowId(null);
     }
   };
 
@@ -177,6 +209,59 @@ export default function ConversationsPage() {
       <div className="flex-1 flex flex-col">
         {selectedConv ? (
           <>
+            {/* ✅ Chat Header with Follow/Unfollow */}
+            <div className="flex items-center justify-between px-6 py-4 border-b bg-white shadow-sm">
+              <div className="flex items-center gap-3">
+                {(() => {
+                  const otherUser = selectedConv.participants.find(
+                    (p) => p._id !== user.id
+                  );
+                  return (
+                    <>
+                      <img
+                        src={`${API}/user/profile-picture/${otherUser._id}`}
+                        alt={otherUser?.firstName}
+                        className="w-10 h-10 rounded-full object-cover border"
+                      />
+                      <h2 className="font-semibold text-lg">
+                        {otherUser?.firstName}
+                      </h2>
+                    </>
+                  );
+                })()}
+              </div>
+
+              <button
+                onClick={() =>
+                  toggleFollow(
+                    selectedConv.participants.find((p) => p._id !== user.id)._id
+                  )
+                }
+                disabled={
+                  updatingFollowId ===
+                  selectedConv.participants.find((p) => p._id !== user.id)._id
+                }
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  isFollowing
+                    ? "bg-green-600 text-white hover:bg-green-700"
+                    : "border border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white"
+                } ${
+                  updatingFollowId ===
+                  selectedConv.participants.find((p) => p._id !== user.id)._id
+                    ? "opacity-50"
+                    : ""
+                }`}
+              >
+                {updatingFollowId ===
+                selectedConv.participants.find((p) => p._id !== user.id)._id
+                  ? "..."
+                  : isFollowing
+                  ? "Following"
+                  : "Follow"}
+              </button>
+            </div>
+
+            {/* ✅ Messages */}
             <div className="flex-1 p-6 overflow-y-auto space-y-3">
               {messages.map((msg, index) => (
                 <div
@@ -200,6 +285,7 @@ export default function ConversationsPage() {
               ))}
             </div>
 
+            {/* ✅ Input */}
             <div className="p-4 border-t bg-white flex items-center">
               <input
                 type="text"

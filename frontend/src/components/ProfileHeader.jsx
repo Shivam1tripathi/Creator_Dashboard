@@ -14,7 +14,6 @@ export default function ProfileHeader({
   onProfileUpdate, // optional callback
 }) {
   const { user: currentUser, setUser } = useAuth();
-  const profilePicId = singleuser?._id || currentUser?._id || currentUser?.id;
 
   // State
   const [editing, setEditing] = useState(false);
@@ -27,7 +26,7 @@ export default function ProfileHeader({
     profilePicture: null,
   });
   const [previewPic, setPreviewPic] = useState(
-    `${API_URL}/user/profile-picture/${profilePicId}`
+    `${API_URL}/user/profile-picture/${currentUser.id}`
   );
   const [loading, setLoading] = useState(false);
   const [phoneError, setPhoneError] = useState("");
@@ -66,10 +65,6 @@ export default function ProfileHeader({
           },
         }
       );
-
-      // update auth context
-      setUser(updatedUser);
-      localStorage.setItem("user", JSON.stringify(updatedUser));
 
       if (onProfileUpdate) onProfileUpdate();
       setEditing(false);
@@ -126,7 +121,7 @@ export default function ProfileHeader({
           ))}
         </div>
 
-        {currentUser?._id !== singleuser?._id ? (
+        {(currentUser?._id || currentUser?.id) !== singleuser?._id ? (
           <button
             onClick={toggleFollow}
             disabled={updatingFollow}

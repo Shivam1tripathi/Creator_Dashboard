@@ -58,8 +58,14 @@ const AdminPanel = () => {
       <div className="mt-6">
         <h3 className="text-xl font-semibold mb-2">All Users</h3>
         <Table
-          headers={["Name", "Email", "Role", "Credits"]}
-          rows={users.map((u) => [u.name, u.email, u.role, u.credits])}
+          headers={["First Name", "Last Name", "Email", "Role", "Credits"]}
+          rows={users.map((u) => [
+            u.FirstName,
+            u.LastName,
+            u.email,
+            u.role,
+            u.credits,
+          ])}
         />
       </div>
     </div>

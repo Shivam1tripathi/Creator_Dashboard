@@ -65,6 +65,19 @@ export default function Navbar() {
                   {label}
                 </Link>
               ))}
+              {user.role === "admin" && (
+                <Link
+                  key="/admin"
+                  to="/admin"
+                  className={`text-sm font-medium transition-colors duration-200 ${
+                    isActive("/admin")
+                      ? "text-purple-400 border-b-2 border-purple-400 pb-1"
+                      : "text-gray-300 hover:text-white"
+                  }`}
+                >
+                  admin
+                </Link>
+              )}
 
               {!user.profileCompleted && (
                 <Link
@@ -152,6 +165,12 @@ export default function Navbar() {
         >
           {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
+        <Link
+          to="/conversation-list"
+          className="px-3 md:hidden py-1 rounded-full bg-orange-500/20 text-orange-400 font-semibold hover:bg-orange-500/30 transition"
+        >
+          Chat
+        </Link>
       </div>
 
       {/* Mobile Menu */}

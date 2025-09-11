@@ -83,7 +83,9 @@ const CreatePost = () => {
 
         {/* File Upload */}
         <div>
-          <label className="block mb-1 font-medium">Upload {type}</label>
+          <label className="block mb-1 font-medium">
+            Upload {type} (15 MB LIMIT)
+          </label>
           <div className="flex items-center space-x-4">
             <label className="cursor-pointer px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition">
               Choose File

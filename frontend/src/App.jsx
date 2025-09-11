@@ -15,7 +15,6 @@ import Exploresection from "./pages/Feed/Exploresection";
 import OtherProfile from "./pages/User/OtherProfile";
 import TrendingPage from "./pages/User/TrendingPage";
 import SavedPosts from "./pages/User/SavedPosts";
-import MessageList from "./components/MessageList";
 import ConversationsPage from "./pages/User/ConversationsPage";
 const App = () => {
   return (
@@ -25,11 +24,11 @@ const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
-          <Route path="/" element={<Homefeed />} />
-
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/explore" element={<Exploresection />} />
+
+            <Route path="/" element={<Homefeed />} />
             <Route path="/post/:id" element={<PostDetails />} />
             <Route path="/myprofile" element={<MyProfile />} />
             <Route path="/complete-profile" element={<CompleteProfile />} />
