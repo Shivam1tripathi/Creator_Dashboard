@@ -108,8 +108,8 @@ export const login = async (req, res) => {
       token,
       user: {
         id: user._id,
-        FirstName: user.FirstName,
-        LastName: user.LastName,
+        FirstName: user.firstName,
+        LastName: user.lastName,
         username: user.username,
         role: user.role,
         credits: user.credits,

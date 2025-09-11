@@ -278,19 +278,24 @@ export const togglePostLike = async (req, res) => {
 
     const post = await Post.findById(postId);
     if (!post) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Post not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Post not found",
+      });
     }
 
-    const alreadyLiked = post.likes.includes(userId);
+    const alreadyLiked = post.likes.some(
+      (like) => like.user.toString() === userId.toString()
+    );
 
     if (alreadyLiked) {
+      // Unlike → remove user object
       post.likes = post.likes.filter(
-        (id) => id.toString() !== userId.toString()
+        (like) => like.user.toString() !== userId.toString()
       );
     } else {
-      post.likes.push(userId);
+      // Like → add with timestamp
+      post.likes.push({ user: userId, createdAt: new Date() });
     }
 
     await post.save();
@@ -317,14 +322,16 @@ export const getPostLikesCount = async (req, res) => {
 
     const post = await Post.findById(postId).select("likes");
     if (!post) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Post not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Post not found",
+      });
     }
 
     return res.status(200).json({
       success: true,
       likesCount: post.likes.length,
+      likes: post.likes, // optional: returns array with { user, createdAt }
     });
   } catch (error) {
     console.error("Error getting likes count:", error);
@@ -336,8 +343,7 @@ export const getPostLikesCount = async (req, res) => {
   }
 };
 
-//Current user liked this post
-
+// Current user liked this post
 export const isPostLiked = async (req, res) => {
   try {
     const { postId } = req.body;
@@ -349,7 +355,9 @@ export const isPostLiked = async (req, res) => {
       return res.status(404).json({ msg: "Post not found" });
     }
 
-    const isLiked = post.likes.includes(userId);
+    const isLiked = post.likes.some(
+      (like) => like.user.toString() === userId.toString()
+    );
 
     res.json({ isLiked });
   } catch (err) {

@@ -4,6 +4,7 @@ import fs from "fs";
 import formidable from "formidable";
 import mongoose from "mongoose";
 import Conversation from "../models/ConversationModel.js";
+import Post from "../models/Post.js";
 
 const normalize = (val) => (Array.isArray(val) ? val[0] : val);
 const fetchImageBuffer = async (url) => {
@@ -33,13 +34,43 @@ export const getSingleUser = async (req, res) => {
 };
 
 export const getDashboard = async (req, res) => {
-  const user = await User.findById(req.user.id);
-  res.json({
-    credits: user.credits,
-    savedPosts: user.savedPosts,
-    reportedPosts: user.reportedPosts,
-    ProfileComplete: user.profileCompleted,
-  });
+  try {
+    const user = await User.findById(req.user.id)
+      .populate("followers", "_id") // just count, don’t fetch heavy data
+      .populate("following", "_id");
+
+    if (!user) {
+      return res.status(404).json({ msg: "User not found" });
+    }
+
+    // Get user posts
+    const posts = await Post.find({ user: req.user.id });
+
+    // Aggregate stats
+    const totalLikes = posts.reduce((acc, post) => acc + post.likes.length, 0);
+    const totalComments = posts.reduce(
+      (acc, post) => acc + post.comments.length,
+      0
+    );
+
+    res.json({
+      credits: user.credits,
+      followers: user.followers.length,
+      following: user.following.length,
+      posts: posts.length,
+      likes: totalLikes,
+      comments: totalComments,
+      bio: user.bio || "",
+      username: user.username,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      profilePicture: user._id, // frontend can fetch via /user/profile-picture/:id
+      status: user.lastLogin ? "online" : "offline", // OR handle via sockets
+    });
+  } catch (err) {
+    console.error("Dashboard fetch error:", err);
+    res.status(500).json({ msg: "Server error" });
+  }
 };
 
 export const savePost = async (req, res) => {
@@ -199,8 +230,6 @@ export const getCredits = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch credits" });
   }
 };
-
-//https://cdn-icons-png.flaticon.com/512/149/149071.png
 
 export const getUserProfilePictureController = async (req, res) => {
   try {
