@@ -131,7 +131,7 @@ export const resendVerification = async (req, res) => {
     await user.save();
 
     // 5. Create verification URL
-    const verifyUrl = `${process.env.CLIENT_URL}/auth/verify-email/${verificationToken}`;
+    const verifyUrl = `${process.env.CLIENT_URL}/verify-email/${token}`;
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
