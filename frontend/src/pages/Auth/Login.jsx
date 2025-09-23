@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
 import Input from "../../components/Input";
+import { toast } from "react-toastify";
 import Button from "../../components/Button";
 
 const API = import.meta.env.VITE_API_URL;
@@ -19,13 +20,20 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     setError("");
+
     try {
       const { data } = await axios.post(`${API}/auth/login`, form);
+
+      // Continue with login
       login(data);
+      toast.success("Login successfully!");
     } catch (err) {
       setError(
         err.response?.data?.msg || "Invalid credentials, please try again."
       );
+
+      // Error notification
+      toast.error("Failed to Login!");
     } finally {
       setLoading(false);
     }

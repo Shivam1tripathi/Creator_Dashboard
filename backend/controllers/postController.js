@@ -175,35 +175,6 @@ export const getPostContentController = async (req, res) => {
   }
 };
 
-// Update Post
-export const updatePostController = async (req, res) => {
-  try {
-    const { caption, tags } = req.fields;
-    const { content } = req.files;
-
-    const post = await Post.findById(req.params.pid);
-
-    if (!post) {
-      return res.status(404).send({ message: "Post not found" });
-    }
-
-    post.caption = caption || post.caption;
-    post.tags = tags ? tags.split(",") : post.tags;
-
-    if (content) {
-      post.content.data = fs.readFileSync(content.path);
-      post.content.contentType = content.type;
-    }
-
-    await post.save();
-    res.status(200).send({ success: true, message: "Post updated", post });
-  } catch (error) {
-    res
-      .status(500)
-      .send({ success: false, message: "Error updating post", error });
-  }
-};
-
 // Delete Post
 export const deletePostController = async (req, res) => {
   try {
@@ -470,5 +441,127 @@ export const getTrendingPhotos = async (req, res) => {
   } catch (error) {
     console.error("Error fetching trending photos:", error);
     res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
+export const reportPost = async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const { reason } = req.body;
+    const userId = req.user._id; // assuming JWT auth middleware sets req.user
+
+    const post = await Post.findById(postId);
+    if (!post) {
+      return res.status(404).json({ success: false, msg: "Post not found" });
+    }
+
+    // check if already reported
+    const alreadyReported = post.reports.some(
+      (report) => report.user.toString() === userId.toString()
+    );
+
+    if (alreadyReported) {
+      return res
+        .status(400)
+        .json({ success: false, msg: "You already reported this post" });
+    }
+
+    // push new report
+    post.reports.push({ user: userId, reason });
+    await post.save();
+
+    res.status(200).json({ success: true, msg: "Post reported successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, msg: "Server error" });
+  }
+};
+
+// Update post (only caption & tags)
+export const updatePost = async (req, res) => {
+  try {
+    const { pid } = req.params; // Post ID
+    const { caption, tags } = req.body;
+
+    // Find post
+    const post = await Post.findById(pid);
+    if (!post) {
+      return res.status(404).json({ success: false, msg: "Post not found" });
+    }
+
+    // Ensure only the owner can update
+    if (post.user.toString() !== req.user._id.toString()) {
+      return res
+        .status(403)
+        .json({ success: false, msg: "Not authorized to update this post" });
+    }
+
+    // Update only caption and tags
+    if (caption !== undefined) post.caption = caption;
+    if (tags !== undefined) post.tags = tags; // expects array of strings
+
+    const updatedPost = await post.save();
+
+    res.status(200).json({
+      success: true,
+      msg: "Post updated successfully",
+      post: updatedPost,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, msg: "Server error" });
+  }
+};
+
+export const getUnseenVideoFeed = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Fetch all videos
+    const videos = await Post.find({ type: "video" })
+      .select("user caption tags likes comments reports videoUrl createdAt")
+      .populate("user", "_id username ")
+      .sort({ createdAt: -1 });
+
+    // Separate unseen and seen videos
+    const unseenVideos = [];
+    const seenVideos = [];
+
+    videos.forEach((video) => {
+      const hasLiked = video.likes.some((like) => like.user.equals(userId));
+      const hasCommented = video.comments.some((comment) =>
+        comment.user.equals(userId)
+      );
+      const hasReported = video.reports.some((report) =>
+        report.user.equals(userId)
+      );
+
+      if (!hasLiked && !hasCommented && !hasReported) {
+        unseenVideos.push(video);
+      } else {
+        seenVideos.push(video);
+      }
+    });
+
+    // Merge unseen first, then seen
+    const orderedVideos = [...unseenVideos, ...seenVideos];
+
+    // Map to required format
+    const feed = orderedVideos.map((video) => ({
+      postId: video._id,
+      userId: video.user._id,
+      username: video.user.username,
+      caption: video.caption,
+      tags: video.tags,
+      videoUrl: video.videoUrl,
+      totalLikes: video.likes.length,
+      Comments: video.comments.length,
+      createdAt: video.createdAt,
+    }));
+
+    res.status(200).json({ success: true, feed });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, msg: "Server error" });
   }
 };

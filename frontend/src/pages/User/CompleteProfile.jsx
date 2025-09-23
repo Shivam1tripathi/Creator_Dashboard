@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -16,10 +16,14 @@ const CompleteProfile = () => {
     const file = e.target.files[0];
     if (file) {
       setProfilePicture(file);
-      setPreview(URL.createObjectURL(file)); // ✅ show preview
+      setPreview(URL.createObjectURL(file));
     }
   };
-
+  useEffect(() => {
+    if (user.profileCompleted === true) {
+      navigate("/");
+    }
+  });
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -48,9 +52,7 @@ const CompleteProfile = () => {
       };
       localStorage.setItem("user", JSON.stringify(updatedUser));
       setUser(updatedUser);
-
-      alert("Profile completed successfully! 🎉");
-      navigate("/dashboard");
+      window.location.reload();
     } catch (err) {
       console.error("Profile completion error:", err);
       alert(
@@ -61,15 +63,15 @@ const CompleteProfile = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-tr from-purple-600 via-pink-500 to-red-400 p-6">
-      <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl w-full max-w-lg p-8 space-y-6 animate-fadeIn">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-tr from-purple-700 via-pink-600 to-orange-500 p-6">
+      <div className="bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl w-full max-w-xl p-10 space-y-8 transition-all transform hover:scale-[1.01]">
         {/* Header */}
-        <div className="text-center">
-          <h2 className="text-3xl font-extrabold text-gray-900">
-            Complete Your Profile
+        <div className="text-center space-y-2">
+          <h2 className="text-4xl font-extrabold text-gray-900">
+            🎉 Complete Your Profile
           </h2>
-          <p className="text-gray-600 text-sm mt-2">
-            Add a bio and profile picture to personalize your account.
+          <p className="text-gray-500 text-sm">
+            Add a bio & profile picture to personalize your journey.
           </p>
         </div>
 
@@ -81,22 +83,22 @@ const CompleteProfile = () => {
         >
           {/* Profile Picture Upload */}
           <div className="flex flex-col items-center gap-3">
-            <div className="relative">
+            <div className="relative group">
               <img
                 src={
                   preview ||
                   "https://cdn-icons-png.flaticon.com/512/3177/3177440.png"
                 }
                 alt="Preview"
-                className="w-28 h-28 rounded-full object-cover border-4 border-purple-500 shadow-lg"
+                className="w-32 h-32 rounded-full object-cover border-4 border-purple-500 shadow-xl group-hover:opacity-80 transition"
               />
               <label
                 htmlFor="profilePicture"
-                className="absolute bottom-0 right-0 bg-purple-600 text-white p-2 rounded-full cursor-pointer hover:bg-purple-700 shadow-md"
+                className="absolute bottom-2 right-2 bg-purple-600 text-white p-3 rounded-full cursor-pointer hover:bg-purple-700 shadow-lg flex items-center justify-center"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="w-4 h-4"
+                  className="w-5 h-5"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -105,7 +107,7 @@ const CompleteProfile = () => {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth="2"
-                    d="M5 13l4 4L19 7"
+                    d="M12 4v16m8-8H4"
                   />
                 </svg>
               </label>
@@ -117,11 +119,19 @@ const CompleteProfile = () => {
                 className="hidden"
               />
             </div>
-            <p className="text-xs text-gray-500">Upload your profile picture</p>
+            <p className="text-xs text-gray-400">
+              Upload a square image for best results
+            </p>
           </div>
 
           {/* Bio */}
           <div>
+            <label
+              htmlFor="bio"
+              className="block text-left text-gray-700 font-medium mb-2"
+            >
+              Your Bio
+            </label>
             <textarea
               id="bio"
               placeholder="Write a short bio about yourself..."
@@ -129,18 +139,23 @@ const CompleteProfile = () => {
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               rows={4}
-              className="w-full border border-gray-300 rounded-lg p-4 resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent shadow-sm"
+              className="w-full border border-gray-300 rounded-xl p-4 resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent shadow-md"
             />
           </div>
 
           {/* Submit Button */}
           <button
             type="submit"
-            className="w-full py-3 bg-purple-600 text-white font-semibold rounded-lg shadow-md hover:bg-purple-700 transition-transform transform hover:scale-[1.02]"
+            className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-xl shadow-md hover:opacity-90 transition-all transform hover:scale-[1.02]"
           >
-            Save & Continue
+            🚀 Save & Continue
           </button>
         </form>
+
+        {/* Footer */}
+        <p className="text-xs text-gray-400 text-center">
+          You can always edit your profile later in my profile.
+        </p>
       </div>
     </div>
   );

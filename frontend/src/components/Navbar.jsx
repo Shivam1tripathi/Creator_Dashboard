@@ -35,6 +35,7 @@ export default function Navbar() {
     { path: "/", label: "Home" },
     { path: "/explore", label: "Explore" },
     { path: "/create-Post", label: "Create Post" },
+    { path: "/video-feed", label: "Short Video" },
   ];
 
   return (
@@ -43,8 +44,9 @@ export default function Navbar() {
         {/* Logo */}
         <Link
           to="/"
-          className="text-2xl font-extrabold tracking-tight text-white hover:text-purple-400 transition-colors"
+          className="text-2xl font-extrabold flex flex-row justify-between items-center tracking-tight text-white hover:text-purple-400 transition-colors"
         >
+          <img src="/CreatorhubProfile.png" className="w-14" />
           Creator<span className="text-purple-400">Hub</span>
         </Link>
 

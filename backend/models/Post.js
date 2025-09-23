@@ -35,6 +35,23 @@ const postSchema = new mongoose.Schema(
         },
       },
     ],
+    reports: [
+      {
+        user: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
+        },
+        reason: {
+          type: String,
+          default: "No reason provided",
+        },
+        createdAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
     comments: [
       {
         user: {

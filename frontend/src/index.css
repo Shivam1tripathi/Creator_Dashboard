@@ -29,3 +29,26 @@
 .animate-slideDown {
   animation: slideDown 0.2s ease-out;
 }
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@keyframes slideLeft {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+.animate-slideUp {
+  animation: slideUp 0.3s ease-out;
+}
+.animate-slideLeft {
+  animation: slideLeft 0.3s ease-out;
+}

@@ -76,27 +76,35 @@ export const getDashboard = async (req, res) => {
 export const savePost = async (req, res) => {
   try {
     const { postId } = req.body;
-
     const user = await User.findById(req.user.id);
 
     // Check if the post is already saved
-    const alreadySaved = user.savedPosts.some(
+    const savedIndex = user.savedPosts.findIndex(
       (p) => p.post.toString() === postId
     );
 
-    if (alreadySaved) {
-      return res.status(400).json({ msg: "Post already saved" });
+    if (savedIndex !== -1) {
+      // ✅ Unsave post
+      user.savedPosts.splice(savedIndex, 1);
+      // Optional: adjust credits (subtract if needed)
+      user.credits = Math.max(0, user.credits - 2);
+
+      await user.save();
+      return res.json({
+        msg: "Post unsaved successfully",
+        credits: user.credits,
+      });
     }
 
-    // Save the post
+    // ✅ Save the post
     user.savedPosts.push({ post: postId });
     user.credits += 2;
-    await user.save();
 
+    await user.save();
     res.json({ msg: "Post saved successfully", credits: user.credits });
   } catch (err) {
     console.error("Save post error:", err.message);
-    res.status(500).json({ msg: "Failed to save post" });
+    res.status(500).json({ msg: "Failed to save/unsave post" });
   }
 };
 

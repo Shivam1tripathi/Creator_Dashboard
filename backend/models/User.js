@@ -45,6 +45,8 @@ const userSchema = new mongoose.Schema(
         },
       },
     ],
+    isVerified: { type: Boolean, default: false },
+    verificationToken: { type: String },
     profileCompleted: {
       type: Boolean,
       default: false,
@@ -63,6 +65,8 @@ const userSchema = new mongoose.Schema(
       data: Buffer,
       contentType: String,
     },
+    resetPasswordToken: String,
+    resetPasswordExpires: Date,
     followers: [
       {
         type: mongoose.Schema.Types.ObjectId,

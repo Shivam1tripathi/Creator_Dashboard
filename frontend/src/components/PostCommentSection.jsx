@@ -7,6 +7,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 const PostCommentSection = ({ postId, expanded, setExpanded }) => {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState("");
@@ -18,6 +19,7 @@ const PostCommentSection = ({ postId, expanded, setExpanded }) => {
       const { data } = await axios.get(
         `${API_URL}/post/post-comments/${postId}`
       );
+
       setComments(data.comments);
     } catch (err) {
       console.error("Failed to fetch comments:", err);
@@ -66,13 +68,14 @@ const PostCommentSection = ({ postId, expanded, setExpanded }) => {
   return (
     <div className="px-4 pb-4 border-t border-gray-100 mt-2">
       {/* Toggle comments */}
-      <div
-        className="text-sm px-1 text-blue-500 mb-2 cursor-pointer hover:underline"
-        onClick={() => setExpanded(!expanded)}
-      >
-        {expanded ? "Hide comments" : `View all ${comments.length} comments`}
-      </div>
-
+      {comments.length != 0 && (
+        <div
+          className="text-sm px-1 text-blue-500 mb-2 cursor-pointer hover:underline"
+          onClick={() => setExpanded(!expanded)}
+        >
+          {expanded ? "Hide comments" : `View all ${comments.length} comments`}
+        </div>
+      )}
       {/* Error */}
       {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
 
@@ -88,7 +91,7 @@ const PostCommentSection = ({ postId, expanded, setExpanded }) => {
           ) : (
             comments.map((c) => (
               <Link
-                to={c.user._id !== "me" ? `/profile/${c.user._id}` : "#"}
+                to={c.user?._id !== "me" ? `/profile/${c.user?._id}` : "#"}
                 key={c._id}
                 className="flex items-start gap-3"
               >
@@ -100,7 +103,7 @@ const PostCommentSection = ({ postId, expanded, setExpanded }) => {
                 <div className="bg-gray-100 px-3 py-2 rounded-lg shadow-sm flex-1">
                   <p className="text-sm">
                     <span className="font-semibold text-gray-800">
-                      {c.user.username}
+                      {c.user.username}:
                     </span>{" "}
                     {c.text}
                   </p>
@@ -127,7 +130,7 @@ const PostCommentSection = ({ postId, expanded, setExpanded }) => {
         <button
           onClick={handleAddComment}
           disabled={posting}
-          className="text-sm bg-blue-500 text-white px-3 py-1 rounded-full hover:bg-blue-600 transition disabled:opacity-50"
+          className="text-sm bg-blue-500 cursor-pointer text-white px-3 py-1 rounded-full hover:bg-blue-600 transition disabled:opacity-50"
         >
           {posting ? "Posting..." : "Post"}
         </button>

@@ -3,7 +3,6 @@ import formidableMiddleware from "express-formidable";
 
 import {
   createPostController,
-  updatePostController,
   deletePostController,
   getAllPostsByUserController,
   getPostContentController,
@@ -17,6 +16,9 @@ import {
   postSearchController,
   getTrendingVideos,
   getTrendingPhotos,
+  reportPost,
+  updatePost,
+  getUnseenVideoFeed,
 } from "../controllers/postController.js";
 import { protect } from "../middlewares/auth.js";
 
@@ -46,14 +48,13 @@ router.post("/like/:pid", protect, togglePostLike);
 router.get("/likes/:pid", getPostLikesCount);
 //Current user liked this post
 router.post("/is-liked", protect, isPostLiked);
+router.post("/:postId/report", protect, reportPost);
 //add comment in post by post id
 router.post("/addpostcomment/:pid", protect, addPostComment);
-router.put(
-  "/update-post/:pid",
-  protect,
-  formidableMiddleware(),
-  updatePostController
-);
+
+router.get("/video-feed", protect, getUnseenVideoFeed);
+router.put("/update/:pid", protect, updatePost);
+
 router.delete("/delete-post/:pid", protect, deletePostController);
 router.get("/trending-videos", getTrendingVideos);
 router.get("/trending-photos", getTrendingPhotos);

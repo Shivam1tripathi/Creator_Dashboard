@@ -53,10 +53,13 @@ const Register = () => {
     }
   };
 
+  const [loading, setLoading] = useState(false);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (usernameError) return;
 
+    setLoading(true); // ✅ disable button when request starts
     try {
       const formData = new FormData();
       Object.entries(form).forEach(([key, value]) => {
@@ -71,10 +74,13 @@ const Register = () => {
       });
 
       if (data.result === true) {
-        navigate("/login");
+        localStorage.setItem("verificationEmail", form.email);
+        navigate("/Resend-verify-email");
       }
     } catch (err) {
-      console.error(err.response?.data?.msg || "Registration failed");
+      toast.error(err.response?.data?.msg || "Registration failed");
+    } finally {
+      setLoading(false); // ✅ re-enable after request finishes
     }
   };
 
@@ -219,10 +225,16 @@ const Register = () => {
 
           <Button
             type="submit"
-            disabled={!!usernameError}
-            className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 rounded-lg shadow-lg transition-transform transform hover:scale-105"
+            disabled={!!usernameError || loading} // disable if error OR loading
+            className={`w-full font-semibold py-3 rounded-lg shadow-lg transition-transform transform 
+    ${
+      loading
+        ? "bg-gray-500 cursor-not-allowed"
+        : "bg-purple-600 hover:bg-purple-700 text-white hover:scale-105"
+    }
+  `}
           >
-            Register
+            {loading ? "Registering..." : "Register"}
           </Button>
         </form>
 

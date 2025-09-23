@@ -79,9 +79,11 @@ io.on("connection", (socket) => {
     io.emit("getUsers", Array.from(onlineUsers.keys()));
   });
   socket.on("sendMessage", ({ senderId, receiverId, text }) => {
+    const messageData = { sender: { _id: senderId }, text };
+
     const receiverSocketId = onlineUsers.get(receiverId);
     if (receiverSocketId) {
-      io.to(receiverSocketId).emit("newMessage", { senderId, text });
+      io.to(receiverSocketId).emit("newMessage", messageData);
     }
   });
 

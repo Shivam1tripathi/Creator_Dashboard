@@ -29,12 +29,20 @@ export default function ConversationsPage() {
       setOnlineUsers(users);
     });
 
+    // ✅ FIXED newMessage handler: include full sender object
     socket.current.on("newMessage", (data) => {
-      if (selectedConv?.participants.some((p) => p._id === data.senderId)) {
+      if (data.senderId && data.senderId !== user.id) {
+        // normalize to { sender: { _id } }
         setMessages((prev) => [
           ...prev,
-          { text: data.text, sender: { _id: data.senderId } },
+          {
+            text: data.text,
+            sender: { _id: data.senderId },
+            _id: Date.now(),
+          },
         ]);
+      } else if (data.sender && data.sender._id !== user.id) {
+        setMessages((prev) => [...prev, data]);
       }
     });
 
@@ -86,7 +94,6 @@ export default function ConversationsPage() {
         .catch((err) => console.error("Error fetching follow status:", err));
     }
   }, [selectedConv, user.id]);
-
   // ✅ Send message
   const handleSend = async () => {
     if (!newMessage.trim() || !selectedConv) return;
@@ -98,7 +105,11 @@ export default function ConversationsPage() {
         text: newMessage,
       });
 
-      const sentMessage = res.data;
+      const sentMessage = {
+        ...res.data,
+        sender: { _id: user.id }, // ✅ ensure format matches
+      };
+
       setMessages((prev) => [...prev, sentMessage]);
 
       const receiverId = selectedConv.participants.find(
@@ -209,7 +220,7 @@ export default function ConversationsPage() {
       <div className="flex-1 flex flex-col">
         {selectedConv ? (
           <>
-            {/* ✅ Chat Header with Follow/Unfollow */}
+            {/* Chat Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b bg-white shadow-sm">
               <div className="flex items-center gap-3">
                 {(() => {
@@ -261,11 +272,10 @@ export default function ConversationsPage() {
               </button>
             </div>
 
-            {/* ✅ Messages */}
+            {/* Messages */}
             <div className="flex-1 p-6 overflow-y-auto space-y-3">
               {messages.map((msg, index) => (
                 <div
-                  key={msg._id || index}
                   className={`flex ${
                     msg.sender?._id === user.id
                       ? "justify-end"
@@ -285,7 +295,7 @@ export default function ConversationsPage() {
               ))}
             </div>
 
-            {/* ✅ Input */}
+            {/* Input */}
             <div className="p-4 border-t bg-white flex items-center">
               <input
                 type="text"
