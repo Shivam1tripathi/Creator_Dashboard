@@ -23,12 +23,6 @@ export const register = async (req, res) => {
     try {
       const { firstName, lastName, username, email, password, phone } = fields;
 
-      if (!email.endsWith("@gmail.com")) {
-        return res.status(400).json({
-          success: false,
-          message: "Only @gmail.com emails are allowed to register",
-        });
-      }
       // check if email exists
       const exist = await User.findOne({ email: normalize(email) });
       if (exist) return res.status(400).json({ msg: "Email already exists" });
