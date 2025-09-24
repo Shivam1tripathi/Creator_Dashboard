@@ -89,7 +89,7 @@ export default function VideoCard({
   return (
     <div className="w-full h-screen flex justify-center items-start snap-start bg-black">
       {/* Reel container */}
-      <div className="relative w-[360px] h-[580px] max-md:w-[400px] mt-5 max-md:mt-16 max-md:h-[750px] bg-gray-900 rounded-xl overflow-hidden">
+      <div className="relative w-[360px] h-[580px] max-md:w-[400px] mt-5 max-md:mt-16 max-md:h-[650px] bg-gray-900 rounded-xl overflow-hidden">
         {/* Video */}
         <video
           ref={videoRef}
