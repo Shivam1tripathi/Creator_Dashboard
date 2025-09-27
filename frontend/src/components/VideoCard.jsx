@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import ActionBar from "./ActionBar";
 import BottomInfo from "./BottomInfo";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -18,10 +19,25 @@ export default function VideoCard({
 }) {
   const [isFollowing, setIsFollowing] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [posturl, setPostUrl] = useState();
   const [muted, setMuted] = useState(true); // ✅ default mute
   const videoRef = useRef(null);
 
   const currentUser = JSON.parse(localStorage.getItem("user"))?.id;
+  const token = localStorage.getItem("token");
+  useEffect(() => {
+    const Fetch = async () => {
+      try {
+        const url = await axios.get(`${API_URL}/post/post-content/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setPostUrl(url.data.contentUrl);
+      } catch (error) {
+        toast.error("network error");
+      }
+    };
+    Fetch();
+  }, [id]);
 
   // ✅ Handle visibility with IntersectionObserver
   useEffect(() => {
@@ -94,7 +110,7 @@ export default function VideoCard({
         <video
           ref={videoRef}
           className="w-full h-full object-cover"
-          src={`${API_URL}/post/post-content/${id}`}
+          src={posturl}
           loop
           playsInline
         />

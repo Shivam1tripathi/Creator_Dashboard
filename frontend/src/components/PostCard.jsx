@@ -22,6 +22,7 @@ const PostCard = ({ post }) => {
   const [likesCount, setLikesCount] = useState(0);
   const [expanded, setExpanded] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [posturl, setPostUrl] = useState();
   const [user, setUser] = useState();
   const [objectFit, setObjectFit] = useState("contain");
   const [loading, setLoading] = useState(true);
@@ -38,7 +39,7 @@ const PostCard = ({ post }) => {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         };
 
-        const [likesRes, savedRes, likedRes, userRes] = await Promise.all([
+        const [likesRes, savedRes, likedRes, userRes, url] = await Promise.all([
           axios.get(`${API_URL}/post/likes/${post._id}`),
           axios.get(`${API_URL}/user/is-saved/${post._id}`, { headers }),
           axios.post(
@@ -47,8 +48,10 @@ const PostCard = ({ post }) => {
             { headers }
           ),
           axios.get(`${API_URL}/post/get-user/${post._id}`, { headers }),
+          axios.get(`${API_URL}/post/post-content/${post._id}`, { headers }),
         ]);
 
+        setPostUrl(url.data.contentUrl);
         setLikesCount(likesRes.data.likesCount);
         setSaved(savedRes.data.isSaved);
         setLiked(likedRes.data.isLiked);
@@ -230,13 +233,13 @@ const PostCard = ({ post }) => {
         >
           {post.type === "image" ? (
             <img
-              src={`${API_URL}/post/post-content/${post._id}`}
+              src={posturl}
               alt="post"
               className={`h-full w-full object-${objectFit} transition-all duration-300`}
             />
           ) : (
             <video
-              src={`${API_URL}/post/post-content/${post._id}`}
+              src={posturl}
               controls
               className="h-full w-full object-contain"
             />

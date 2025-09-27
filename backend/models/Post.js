@@ -14,14 +14,25 @@ const postSchema = new mongoose.Schema(
       required: true,
     },
     content: {
-      data: Buffer,
-      contentType: String,
+      url: {
+        type: String, // Cloudinary secure_url
+        required: true,
+      },
+      public_id: {
+        type: String, // Cloudinary file identifier (for deletion)
+        required: true,
+      },
+      resource_type: {
+        type: String, // "image" or "video"
+        required: true,
+      },
     },
     caption: {
       type: String,
       required: true,
     },
     tags: [String],
+
     likes: [
       {
         user: {
@@ -35,6 +46,7 @@ const postSchema = new mongoose.Schema(
         },
       },
     ],
+
     reports: [
       {
         user: {
@@ -52,6 +64,7 @@ const postSchema = new mongoose.Schema(
         },
       },
     ],
+
     comments: [
       {
         user: {

@@ -21,7 +21,6 @@ export default function VideoFeed() {
         const res = await axios.get(`${API_URL}/post/video-feed`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-
         setReels(res.data.feed || []);
       } catch (err) {
         console.error("Failed to fetch feed:", err);

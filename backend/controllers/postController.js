@@ -1,13 +1,13 @@
 import Post from "../models/Post.js";
-import User from "../models/User.js";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-
+import multer from "multer";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-import { v4 as uuidv4 } from "uuid";
+import cloudinary from "../config/cloudinary.js";
+const storage = multer.diskStorage({});
+export const upload = multer({ storage });
 
 export const createPostController = async (req, res) => {
   try {
@@ -15,35 +15,34 @@ export const createPostController = async (req, res) => {
     const { content } = req.files;
 
     // Validation
-    switch (true) {
-      case !type:
-        return res.status(400).send({ message: "Post type is required" });
-      case !content:
-        return res
-          .status(400)
-          .send({ message: "Post content file is required" });
-      case content.size > 50000000:
-        return res
-          .status(400)
-          .send({ message: "Content must be less than 50MB" });
-    }
+    if (!type)
+      return res.status(400).send({ message: "Post type is required" });
+    if (!content)
+      return res.status(400).send({ message: "Post content is required" });
 
-    // Read file as binary
-    const fileData = fs.readFileSync(content.path);
+    // Upload to Cloudinary
+    const uploadResult = await cloudinary.uploader.upload(content.path, {
+      folder: "posts",
+      resource_type: type === "video" ? "video" : "image",
+    });
 
-    // Save file directly in MongoDB
+    // Create Post
     const post = new Post({
+      user: req.user._id,
       type,
       caption,
       tags: tags ? tags.split(",") : [],
-      user: req.user._id,
       content: {
-        data: fileData,
-        contentType: content.type,
+        url: uploadResult.secure_url,
+        public_id: uploadResult.public_id,
+        resource_type: uploadResult.resource_type,
       },
     });
 
     await post.save();
+
+    // Delete temp file
+    fs.unlinkSync(content.path);
 
     res.status(201).send({
       success: true,
@@ -146,27 +145,36 @@ export const getAllPostsByUserController = async (req, res) => {
 };
 
 //get post content
-
 export const getPostContentController = async (req, res) => {
   try {
     const id = req.params.pid;
+
     if (!id) {
-      return res
-        .status(400)
-        .send({ success: false, message: "Post ID is required" });
+      return res.status(400).send({
+        success: false,
+        message: "Post ID is required",
+      });
     }
 
+    // Fetch post
     const post = await Post.findById(id).select("content");
-    if (!post || !post.content || !post.content.data) {
-      return res
-        .status(404)
-        .send({ success: false, message: "Post content not found" });
+
+    if (!post || !post.content || !post.content.url) {
+      return res.status(404).send({
+        success: false,
+        message: "Post content not found",
+      });
     }
 
-    res.set("Content-Type", post.content.contentType);
-    res.send(post.content.data);
+    // Instead of streaming binary, just return the Cloudinary URL
+    res.status(200).send({
+      success: true,
+      message: "Post content fetched successfully",
+      contentUrl: post.content.url,
+      resourceType: post.content.resource_type,
+    });
   } catch (error) {
-    console.error("Error streaming post content:", error);
+    console.error("Error fetching post content:", error);
     return res.status(500).send({
       success: false,
       message: "Error loading content",
