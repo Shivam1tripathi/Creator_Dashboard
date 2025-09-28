@@ -7,8 +7,8 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 export default function VideoFeed() {
   const [reels, setReels] = useState([]);
-  const [loading, setLoading] = useState(true); // ✅ Initial loader
-  const [fetchingMore, setFetchingMore] = useState(false); // ✅ Loader for infinite scroll
+  const [loading, setLoading] = useState(true);
+  const [fetchingMore, setFetchingMore] = useState(false);
   const [activeId, setActiveId] = useState(null);
   const [volume, setVolume] = useState(0.5);
   const [isMuted, setIsMuted] = useState(true);
@@ -19,7 +19,6 @@ export default function VideoFeed() {
   const observer = useRef();
   const navigate = useNavigate();
 
-  // ✅ Fetch feed videos (with pagination)
   const fetchFeed = useCallback(
     async (pageNum) => {
       try {
@@ -29,9 +28,7 @@ export default function VideoFeed() {
         const token = localStorage.getItem("token");
         const res = await axios.get(
           `${API_URL}/post/video-feed?page=${pageNum}&limit=5`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
 
         if (res.data?.feed?.length > 0) {
@@ -56,7 +53,6 @@ export default function VideoFeed() {
     fetchFeed(page);
   }, [page, fetchFeed]);
 
-  // ✅ Infinite scroll observer
   const lastVideoRef = useCallback(
     (node) => {
       if (fetchingMore) return;
@@ -71,11 +67,11 @@ export default function VideoFeed() {
     [fetchingMore, hasMore]
   );
 
-  // ✅ Full screen loader for first fetch
+  // ✅ Full screen loader
   if (loading && page === 1) {
     return (
-      <div className="h-screen flex items-center justify-center text-white text-lg">
-        Loading feed...
+      <div className="h-screen flex items-center justify-center bg-black">
+        <div className="w-12 h-12 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -116,7 +112,6 @@ export default function VideoFeed() {
       {reels.length > 0 ? (
         reels.map((reel, idx) => {
           if (idx === reels.length - 1) {
-            // ✅ Attach ref to last element for infinite scroll
             return (
               <div
                 key={reel.postId}
@@ -160,10 +155,10 @@ export default function VideoFeed() {
         </div>
       )}
 
-      {/* ✅ Loader for infinite scroll */}
+      {/* ✅ Infinite scroll loader */}
       {fetchingMore && (
-        <div className="h-20 flex items-center justify-center text-gray-400">
-          Loading more...
+        <div className="h-20 flex items-center justify-center">
+          <div className="w-8 h-8 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
         </div>
       )}
     </div>
