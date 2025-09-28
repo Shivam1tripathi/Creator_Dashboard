@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import SavedPostCard from "../../components/SavedPostCard";
 
 const API = import.meta.env.VITE_API_URL; // ✅ base API from .env
 
@@ -52,36 +53,7 @@ export default function SavedPosts() {
       <h1 className="text-2xl font-bold mb-6">Your Saved Posts</h1>
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {posts.map((post, index) => (
-          <motion.div
-            key={post._id || index}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.05 }}
-            className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition duration-300 cursor-pointer"
-            onClick={() => navigate(`/post/${post._id}`)}
-          >
-            {post.type === "image" && (
-              <img
-                src={`${API}/post/post-content/${post._id}`}
-                alt={post.caption}
-                className="w-full h-56 object-cover"
-                loading="lazy"
-              />
-            )}
-            {post.type === "video" && (
-              <video
-                src={`${API}/post/post-content/${post._id}`}
-                className="w-full h-56 object-cover"
-                controls
-              />
-            )}
-            <div className="p-4">
-              <p className="font-semibold text-gray-800">{post.caption}</p>
-              <p className="text-sm text-gray-500 mt-1">
-                by {post.user?.username || "Unknown"}
-              </p>
-            </div>
-          </motion.div>
+          <SavedPostCard key={post._id} post={post} index={index} />
         ))}
       </div>
     </div>

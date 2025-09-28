@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import MediaCard from "./MediaCard";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -52,26 +53,7 @@ const Gallery = ({ media, loading }) => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {filteredMedia.map((item) => (
-            <Link to={`/post/${item._id}`} key={item._id}>
-              {item.type === "image" ? (
-                <img
-                  src={`${API_URL}/post/post-content/${item._id}`}
-                  alt="uploaded"
-                  loading="lazy"
-                  className="w-full h-64 object-cover rounded-xl border border-gray-700/30 shadow-md hover:shadow-purple-500/30 hover:scale-[1.03] transition-transform duration-300"
-                />
-              ) : (
-                <video
-                  src={`${API_URL}/post/post-content/${item._id}`}
-                  className="w-full h-64 object-cover rounded-xl border border-gray-700/30 shadow-md hover:shadow-purple-500/30 hover:scale-[1.03] transition-transform duration-300"
-                  muted
-                  loop
-                  playsInline
-                  onMouseOver={(e) => e.currentTarget.play()}
-                  onMouseOut={(e) => e.currentTarget.pause()}
-                />
-              )}
-            </Link>
+            <MediaCard key={item._id} item={item} />
           ))}
         </div>
       )}

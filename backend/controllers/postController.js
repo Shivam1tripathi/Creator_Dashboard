@@ -520,15 +520,17 @@ export const updatePost = async (req, res) => {
     res.status(500).json({ success: false, msg: "Server error" });
   }
 };
-
 export const getUnseenVideoFeed = async (req, res) => {
   try {
     const userId = req.user._id;
+    const page = parseInt(req.query.page) || 1; // default page 1
+    const limit = parseInt(req.query.limit) || 10; // default 10 per page
+    const skip = (page - 1) * limit;
 
     // Fetch all videos
     const videos = await Post.find({ type: "video" })
       .select("user caption tags likes comments reports videoUrl createdAt")
-      .populate("user", "_id username ")
+      .populate("user", "_id username")
       .sort({ createdAt: -1 });
 
     // Separate unseen and seen videos
@@ -554,8 +556,15 @@ export const getUnseenVideoFeed = async (req, res) => {
     // Merge unseen first, then seen
     const orderedVideos = [...unseenVideos, ...seenVideos];
 
+    // Total count for pagination
+    const total = orderedVideos.length;
+    const totalPages = Math.ceil(total / limit);
+
+    // Apply pagination
+    const paginatedVideos = orderedVideos.slice(skip, skip + limit);
+
     // Map to required format
-    const feed = orderedVideos.map((video) => ({
+    const feed = paginatedVideos.map((video) => ({
       postId: video._id,
       userId: video.user._id,
       username: video.user.username,
@@ -567,7 +576,13 @@ export const getUnseenVideoFeed = async (req, res) => {
       createdAt: video.createdAt,
     }));
 
-    res.status(200).json({ success: true, feed });
+    res.status(200).json({
+      success: true,
+      page,
+      totalPages,
+      totalPosts: total,
+      feed,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, msg: "Server error" });

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 const API = import.meta.env.VITE_API_URL; // ✅ Use env variable
 
@@ -10,14 +11,15 @@ const CreatePost = () => {
   const [tags, setTags] = useState("");
   const [preview, setPreview] = useState("");
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0); // ✅ upload progress state
 
-  const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15 MB
+  const MAX_FILE_SIZE = 30 * 1024 * 1024; // 30 MB
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       if (file.size > MAX_FILE_SIZE) {
-        alert("❌ File size exceeds 50MB. Please upload a smaller file.");
+        alert("❌ File size exceeds 30MB. Please upload a smaller file.");
         setContent(null);
         setPreview("");
         return;
@@ -39,20 +41,29 @@ const CreatePost = () => {
 
     try {
       setLoading(true);
+      setProgress(0);
+
       const { data } = await axios.post(`${API}/post/create-post`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         withCredentials: true,
+        onUploadProgress: (progressEvent) => {
+          const percent = Math.round(
+            (progressEvent.loaded * 100) / progressEvent.total
+          );
+          setProgress(percent);
+        },
       });
 
       if (data.success) {
-        alert("✅ Post created successfully!");
+        toast.success("✅ Posted successfully!");
         setCaption("");
         setTags("");
         setContent(null);
         setPreview("");
+        setProgress(0);
       }
     } catch (err) {
       console.error(err);
@@ -153,6 +164,21 @@ const CreatePost = () => {
             placeholder="e.g. travel, food, tech"
           />
         </div>
+
+        {/* Progress Bar */}
+        {loading && (
+          <div className="w-full bg-gray-200 rounded-full h-2.5 mb-3">
+            <div
+              className="bg-blue-600 h-2.5 rounded-full transition-all"
+              style={{ width: `${progress}%` }}
+            ></div>
+          </div>
+        )}
+        {progress > 0 && (
+          <p className="text-sm text-gray-600 text-center">
+            {progress}% uploaded
+          </p>
+        )}
 
         {/* Submit Button */}
         <button
