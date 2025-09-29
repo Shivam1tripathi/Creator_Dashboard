@@ -43,7 +43,7 @@ export default function Layout({ children }) {
         <Navbar />
       </header>
 
-      <main className="flex-1 bg-gray-50 pt-[70px]">{children}</main>
+      <main className="flex-1 bg-gray-50 pt-[60px]">{children}</main>
 
       <Footer />
     </div>
