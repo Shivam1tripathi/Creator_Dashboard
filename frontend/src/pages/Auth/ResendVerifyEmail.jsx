@@ -33,6 +33,7 @@ const ResendVerifyEmail = () => {
         user_email: localStorage.getItem("verificationEmail"),
         verify_link: res.data.verifyUrl,
       };
+      console.log(templateParams);
 
       try {
         const result = await emailjs.send(
