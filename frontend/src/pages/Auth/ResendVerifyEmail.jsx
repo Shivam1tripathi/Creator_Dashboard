@@ -1,18 +1,20 @@
 import { useState } from "react";
 import axios from "axios";
+import emailjs from "@emailjs/browser";
+import { toast } from "react-toastify";
 
 const ResendVerifyEmail = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [disabled, setDisabled] = useState(false);
   const [countdown, setCountdown] = useState(30);
-
+  const [verifyurl, setVerifyUrl] = useState();
   const handleResend = async () => {
     try {
       setLoading(true);
       setMessage("");
 
-      const email = localStorage.getItem("verificationEmail"); // assuming you saved it at register/login
+      const email = localStorage.getItem("verificationEmail");
       if (!email) {
         setMessage("❌ Email not found in session.");
         return;
@@ -22,13 +24,14 @@ const ResendVerifyEmail = () => {
         `${import.meta.env.VITE_API_URL}/auth/resend-verification`,
         { email }
       );
-
+      setVerifyUrl(res.data.verifyUrl);
       setMessage(`✅ ${res.data.msg || "Verification email resent!"}`);
       setDisabled(true);
 
       // Start 30s countdown
       let timeLeft = 30;
       setCountdown(timeLeft);
+      sendEmail();
       const interval = setInterval(() => {
         timeLeft -= 1;
         setCountdown(timeLeft);
@@ -46,6 +49,25 @@ const ResendVerifyEmail = () => {
     }
   };
 
+  const sendEmail = async () => {
+    const templateParams = {
+      user_email: localStorage.getItem("verificationEmail"),
+      verify_link: verifyurl,
+    };
+
+    try {
+      const result = await emailjs.send(
+        import.meta.env.VITE_EMAILJS_SERVICE_ID_2,
+        import.meta.env.VITE_EMAILJS_Resend_Email_TEMPLATE_ID,
+        templateParams,
+        import.meta.env.VITE_EMAILJS_PUBLIC_KEY_2
+      );
+
+      toast.success("✅ Verification Email sent!");
+    } catch (error) {
+      toast.error("❌ Email failed");
+    }
+  };
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="bg-white shadow-lg rounded-xl p-8 max-w-md text-center">

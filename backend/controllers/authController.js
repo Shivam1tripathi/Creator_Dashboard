@@ -4,7 +4,6 @@ import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import formidable from "formidable";
 import axios from "axios";
-import nodemailer from "nodemailer";
 const normalize = (val) => (Array.isArray(val) ? val[0] : val);
 const fetchImageBuffer = async (url) => {
   const response = await axios.get(url, { responseType: "arraybuffer" });
@@ -44,43 +43,7 @@ export const register = async (req, res) => {
         data: defaultBuffer,
         contentType: "image/png",
       };
-      const transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
-      });
       const verifyUrl = `${process.env.CLIENT_URL}/verify-email/${verificationToken}`;
-      await transporter.sendMail({
-        from: `"VERIFY EMAIL" <${process.env.EMAIL_USER}>`,
-        to: email,
-        subject: "🔐 Verify Your Email Address",
-        html: `
-    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-      <h2 style="color: #4CAF50;">Welcome to Auth App, ${
-        firstName + " " + lastName
-      } 👋</h2>
-      <p>Thanks for signing up! Please confirm your email address to activate your account.</p>
-      
-      <p style="margin: 20px 0;">
-        <a href="${verifyUrl}" 
-           style="background-color: #4CAF50; color: white; padding: 12px 20px; 
-                  text-decoration: none; border-radius: 5px; display: inline-block;">
-          ✅ Verify My Email
-        </a>
-      </p>
-      
-      <p>If the button doesn’t work, copy and paste this link into your browser:</p>
-      <p style="word-break: break-all;">${verifyUrl}</p>
-      
-      <hr style="margin: 20px 0;"/>
-      <p style="font-size: 12px; color: #777;">
-        If you didn’t create an account, you can safely ignore this email.
-      </p>
-    </div>
-  `,
-      });
 
       // create new user
       const newUser = new User({
@@ -96,9 +59,11 @@ export const register = async (req, res) => {
 
       await newUser.save();
 
-      res
-        .status(201)
-        .json({ msg: "User registered successfully", result: true });
+      res.status(201).json({
+        msg: "User registered successfully",
+        verifyUrl: verifyUrl,
+        result: true,
+      });
     } catch (err) {
       console.error("Registration error:", err);
       res.status(500).json({ result: false, msg: "Server error", err });
@@ -132,33 +97,17 @@ export const resendVerification = async (req, res) => {
 
     // 5. Create verification URL
     const verifyUrl = `${process.env.CLIENT_URL}/verify-email/${token}`;
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-    // 6. Send email
-    await transporter.sendMail({
-      from: `"VERIFY EMAIL" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: "Resend: Verify your email",
-      html: `
-        <h2>Hello ${user.firstName + " " + user.lastName},</h2>
-        <p>You requested a new verification link. Please click below to verify your email:</p>
-        <a href="${verifyUrl}" 
-           style="display:inline-block;padding:10px 20px;margin-top:10px;background:#4f46e5;color:#fff;text-decoration:none;border-radius:6px;">
-           Verify Email
-        </a>
-        <p>This link will expire in 1 day.</p>
-      `,
-    });
 
-    res.json({ msg: "Verification email resent successfully" });
+    res.json({
+      msg: "Verification email resent successfully",
+      verifyUrl: verifyUrl,
+    });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ msg: "Server error", error: error.message });
+    res.status(500).json({
+      msg: "Server error",
+      error: error.message,
+    });
   }
 };
 
@@ -266,22 +215,11 @@ export const forgetpassword = async (req, res) => {
   await user.save();
 
   const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
-  await transporter.sendMail({
-    from: `"Auth App" <${process.env.EMAIL_USER}>`,
-    to: email,
-    subject: "Reset your password",
-    html: `<p>Click here to reset your password:</p>
-           <a href="${resetUrl}">${resetUrl}</a>`,
-  });
 
-  res.json({ msg: "Password reset link sent to your email" });
+  res.json({
+    msg: "Password reset link sent to your email",
+    resetUrl: resetUrl,
+  });
 };
 
 // POST /auth/reset-password/:token
