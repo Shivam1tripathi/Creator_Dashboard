@@ -11,7 +11,6 @@ const API = import.meta.env.VITE_API_URL;
 
 const Register = () => {
   const navigate = useNavigate();
-  const [verifyurl, setVerifyUrl] = useState();
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -74,9 +73,24 @@ const Register = () => {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
-      setVerifyUrl(data.verifyUrl);
+      const templateParams = {
+        user_name: form.firstName + " " + form.lastName,
+        user_email: form.email,
+        verify_link: data.verifyUrl,
+      };
+      try {
+        const result = await emailjs.send(
+          import.meta.env.VITE_EMAILJS_SERVICE_ID,
+          import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+          templateParams,
+          import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+        );
 
-      sendEmail();
+        toast.success("✅ Verification Email sent!");
+      } catch (error) {
+        toast.error("❌ Email failed");
+      }
+
       if (data.result === true) {
         localStorage.setItem("verificationEmail", form.email);
         navigate("/Resend-verify-email");
@@ -85,27 +99,6 @@ const Register = () => {
       toast.error(err.response?.data?.msg || "Registration failed");
     } finally {
       setLoading(false); // ✅ re-enable after request finishes
-    }
-  };
-
-  const sendEmail = async () => {
-    const templateParams = {
-      user_name: form.firstName + " " + form.lastName,
-      user_email: form.email,
-      verify_link: verifyurl,
-    };
-
-    try {
-      const result = await emailjs.send(
-        import.meta.env.VITE_EMAILJS_SERVICE_ID,
-        import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
-        templateParams,
-        import.meta.env.VITE_EMAILJS_PUBLIC_KEY
-      );
-
-      toast.success("✅ Verification Email sent!");
-    } catch (error) {
-      toast.error("❌ Email failed");
     }
   };
 

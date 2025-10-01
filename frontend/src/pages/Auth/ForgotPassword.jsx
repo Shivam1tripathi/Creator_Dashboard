@@ -9,7 +9,6 @@ const ForgotPassword = () => {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [resetUrl, setResetUrl] = useState();
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -20,32 +19,28 @@ const ForgotPassword = () => {
       const { data } = await axios.post(`${API_URL}/auth/forgot-password`, {
         email,
       });
-      setResetUrl(data.resetUrl);
-      sendEmail();
+      const templateParams = {
+        user_email: email,
+        reset_url: data.resetUrl,
+      };
+
+      try {
+        const result = await emailjs.send(
+          import.meta.env.VITE_EMAILJS_SERVICE_ID,
+          import.meta.env.VITE_EMAILJS_ForgetPass_TEMPLATE_ID,
+          templateParams,
+          import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+        );
+
+        toast.success("✅Password reset link sent to your email.");
+      } catch (error) {
+        toast.error("❌ Something went wrong. Try again");
+      }
       setMessage(data.msg || "Password reset link sent to your email.");
     } catch (err) {
       setError(err.response?.data?.msg || "Something went wrong. Try again.");
     } finally {
       setLoading(false);
-    }
-  };
-  const sendEmail = async () => {
-    const templateParams = {
-      user_email: email,
-      reset_url: resetUrl,
-    };
-
-    try {
-      const result = await emailjs.send(
-        import.meta.env.VITE_EMAILJS_SERVICE_ID,
-        import.meta.env.VITE_EMAILJS_ForgetPass_TEMPLATE_ID,
-        templateParams,
-        import.meta.env.VITE_EMAILJS_PUBLIC_KEY
-      );
-
-      toast.success("✅Password reset link sent to your email.");
-    } catch (error) {
-      toast.error("❌ Something went wrong. Try again");
     }
   };
 
