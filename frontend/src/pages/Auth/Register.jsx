@@ -79,7 +79,6 @@ const Register = () => {
         verify_link: data.verifyUrl,
       };
       try {
-        console.log(templateParams);
         const result = await emailjs.send(
           import.meta.env.VITE_EMAILJS_SERVICE_ID,
           import.meta.env.VITE_EMAILJS_TEMPLATE_ID,

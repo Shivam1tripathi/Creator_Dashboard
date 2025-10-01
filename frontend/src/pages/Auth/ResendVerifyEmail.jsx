@@ -31,9 +31,8 @@ const ResendVerifyEmail = () => {
       setCountdown(timeLeft);
       const templateParams = {
         user_email: localStorage.getItem("verificationEmail"),
-        verify_link: res.data.verifyUrl,
+        verify_link: res.data.verify_link,
       };
-      console.log(templateParams);
 
       try {
         const result = await emailjs.send(

@@ -23,7 +23,6 @@ const ForgotPassword = () => {
         user_email: email,
         reset_url: data.resetUrl,
       };
-      console.log(templateParams);
 
       try {
         const result = await emailjs.send(
