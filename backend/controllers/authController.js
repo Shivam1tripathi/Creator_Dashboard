@@ -37,7 +37,7 @@ export const register = async (req, res) => {
       const verificationToken = jwt.sign(
         { email },
         process.env.JWT_SECRET,
-        { expiresIn: "1d" } // valid for 1 day
+        { expiresIn: "3h" } // valid for 1 day
       );
       const profilePicture = {
         data: defaultBuffer,
@@ -88,7 +88,7 @@ export const resendVerification = async (req, res) => {
 
     // 3. Generate new token
     const token = jwt.sign({ email }, process.env.JWT_SECRET, {
-      expiresIn: "1d",
+      expiresIn: "3h",
     });
 
     // 4. Save token in DB

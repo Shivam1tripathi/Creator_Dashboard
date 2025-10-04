@@ -11,10 +11,6 @@ const Gallery = ({ media, loading }) => {
     mediaType === "photo" ? item.type === "image" : item.type === "video"
   );
 
-  useEffect(() => {
-    console.log(media);
-  }, [media]);
-
   return (
     <div className="mx-auto p-4">
       {/* Filter Toggle */}

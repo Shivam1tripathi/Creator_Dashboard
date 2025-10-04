@@ -7,60 +7,61 @@ import Gallery from "../../components/Gallery";
 const API = import.meta.env.VITE_API_URL; // ✅ Use env variable
 
 const MyProfile = () => {
-  const [singleUser, setSingleUser] = useState();
+  const [singleUser, setSingleUser] = useState(null);
   const [media, setMedia] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // 🔴 start true
   const { user } = useAuth();
 
-  /* Fetch posts */
   useEffect(() => {
-    const fetchMedia = async () => {
+    const fetchData = async () => {
       if (!user?.id) return;
+
+      setLoading(true);
       try {
-        setLoading(true);
-        const { data } = await axios.get(`${API}/post/get-allpost/${user.id}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-          withCredentials: true,
-        });
-        if (data.success) setMedia(data.posts || []);
+        // Fetch user + posts in parallel
+        const [userRes, mediaRes] = await Promise.all([
+          axios.get(`${API}/user/single-user/${user.id}`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }),
+          axios.get(`${API}/post/get-allpost/${user.id}`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+            withCredentials: true,
+          }),
+        ]);
+
+        // ✅ Set user
+        setSingleUser(userRes.data.user);
+
+        // ✅ Set media
+        if (mediaRes.data.success) setMedia(mediaRes.data.posts || []);
       } catch (err) {
-        console.error("Failed to fetch media", err);
+        console.error("Error fetching profile data:", err);
       } finally {
-        setLoading(false);
+        setLoading(false); // ✅ finish only after both
       }
     };
 
-    fetchMedia();
-  }, [user]);
-
-  /* Fetch current user details */
-  useEffect(() => {
-    const fetchSingleUser = async () => {
-      if (!user?.id) return; // wait for auth
-      try {
-        const res = await axios.get(`${API}/user/single-user/${user.id}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
-        setSingleUser(res.data.user);
-      } catch (err) {
-        console.error(
-          "Failed to load user:",
-          err.response?.data?.msg || err.message
-        );
-      }
-    };
-
-    fetchSingleUser();
+    fetchData();
   }, [user]);
 
   return (
     <>
-      <ProfileHeader singleuser={singleUser} media={media.length} />
-      <Gallery media={media} loading={loading} />
+      {loading ? (
+        <div className="flex items-center justify-center gap-1 py-20">
+          <span className="w-1.5 h-6 bg-purple-500 rounded animate-[bounce_0.6s_infinite]" />
+          <span className="w-1.5 h-6 bg-pink-500 rounded animate-[bounce_0.6s_infinite_0.2s]" />
+          <span className="w-1.5 h-6 bg-blue-500 rounded animate-[bounce_0.6s_infinite_0.4s]" />
+        </div>
+      ) : (
+        <>
+          <ProfileHeader singleuser={singleUser} media={media.length} />
+          <Gallery media={media} loading={loading} />
+        </>
+      )}
     </>
   );
 };

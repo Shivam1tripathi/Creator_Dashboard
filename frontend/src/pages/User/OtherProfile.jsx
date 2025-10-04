@@ -12,51 +12,44 @@ const OtherProfile = () => {
   const { user: currentUser } = useAuth();
   const [otherUser, setOtherUser] = useState(null);
   const [media, setMedia] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // 🔴 one loader for both
   const [isFollowing, setIsFollowing] = useState(false);
   const [updatingFollow, setUpdatingFollow] = useState(false);
 
-  /* Fetch user info */
   useEffect(() => {
-    const fetchUser = async () => {
+    const fetchData = async () => {
+      setLoading(true);
       try {
-        const res = await axios.get(`${API}/user/single-user/${otherUserId}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
-        setOtherUser(res.data.user);
-        setIsFollowing(res.data.user.followers?.includes(currentUser.id));
-      } catch (err) {
-        console.error("Failed to load user", err);
-      }
-    };
-    fetchUser();
-  }, [otherUserId, currentUser]);
-
-  /* Fetch user's posts */
-  useEffect(() => {
-    const fetchMedia = async () => {
-      try {
-        setLoading(true);
-        const { data } = await axios.get(
-          `${API}/post/get-allpost/${otherUserId}`,
-          {
+        // Run both requests in parallel
+        const [userRes, mediaRes] = await Promise.all([
+          axios.get(`${API}/user/single-user/${otherUserId}`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }),
+          axios.get(`${API}/post/get-allpost/${otherUserId}`, {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
             withCredentials: true,
-          }
-        );
-        if (data.success) setMedia(data.posts || []);
+          }),
+        ]);
+
+        // ✅ Set user
+        setOtherUser(userRes.data.user);
+        setIsFollowing(userRes.data.user.followers?.includes(currentUser.id));
+
+        // ✅ Set posts
+        if (mediaRes.data.success) setMedia(mediaRes.data.posts || []);
       } catch (err) {
-        console.error("Failed to fetch media", err);
+        console.error("Error fetching profile data:", err);
       } finally {
-        setLoading(false);
+        setLoading(false); // ✅ Done when both finish
       }
     };
-    fetchMedia();
-  }, [otherUserId]);
+
+    fetchData();
+  }, [otherUserId, currentUser]);
 
   /* Toggle follow */
   const toggleFollow = async () => {
@@ -79,23 +72,33 @@ const OtherProfile = () => {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6">
-      {otherUser && (
-        <ProfileHeader
-          singleuser={otherUser}
-          media={media.length}
-          isFollowing={isFollowing}
-          updatingFollow={updatingFollow}
-          toggleFollow={toggleFollow}
-        />
-      )}
+      {loading ? (
+        <div className="flex items-center justify-center gap-1 py-20">
+          <span className="w-1.5 h-6 bg-purple-500 rounded animate-[bounce_0.6s_infinite]" />
+          <span className="w-1.5 h-6 bg-pink-500 rounded animate-[bounce_0.6s_infinite_0.2s]" />
+          <span className="w-1.5 h-6 bg-blue-500 rounded animate-[bounce_0.6s_infinite_0.4s]" />
+        </div>
+      ) : (
+        <>
+          {otherUser && (
+            <ProfileHeader
+              singleuser={otherUser}
+              media={media.length}
+              isFollowing={isFollowing}
+              updatingFollow={updatingFollow}
+              toggleFollow={toggleFollow}
+            />
+          )}
 
-      {/* Gallery Section */}
-      <div className="bg-white rounded-lg shadow p-4">
-        <h3 className="text-lg font-semibold border-b pb-2 mb-4">
-          {otherUser?.username}'s Posts
-        </h3>
-        <Gallery media={media} loading={loading} />
-      </div>
+          {/* Gallery Section */}
+          <div className="bg-white rounded-lg shadow p-4 mt-4">
+            <h3 className="text-lg font-semibold border-b pb-2 mb-4">
+              {otherUser?.username}'s Posts
+            </h3>
+            <Gallery media={media} loading={loading} />
+          </div>
+        </>
+      )}
     </div>
   );
 };

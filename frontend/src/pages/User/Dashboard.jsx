@@ -96,11 +96,10 @@ const Dashboard = () => {
         <h3 className="text-lg font-semibold mb-4 text-gray-800">
           Engagement Summary
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {[
             { label: "Likes", value: data.likes },
             { label: "Comments", value: data.comments },
-            { label: "Shares", value: data.shares },
           ].map((stat, idx) => (
             <div
               key={idx}

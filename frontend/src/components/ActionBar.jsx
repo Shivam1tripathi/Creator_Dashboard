@@ -60,8 +60,15 @@ export default function ActionBar({ postId, totalcomments, activeId }) {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
       );
+      const likedRes = await axios.post(
+        `${API_URL}/post/is-liked`,
+        { postId },
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        }
+      );
       setLikes(data.totalLikes);
-      setLiked(data.isLiked);
+      setLiked(likedRes.data.isLiked);
     } catch (error) {
       console.error("Failed to like/unlike post:", error);
       toast.error("Failed to update like!");
