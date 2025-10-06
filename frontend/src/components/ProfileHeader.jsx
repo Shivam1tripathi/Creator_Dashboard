@@ -26,7 +26,7 @@ export default function ProfileHeader({
     profilePicture: null,
   });
   const [previewPic, setPreviewPic] = useState(
-    `${API_URL}/user/profile-picture/${currentUser.id}`
+    `${API_URL}/user/profile-picture/${singleuser._id}`
   );
   const [loading, setLoading] = useState(false);
   const [phoneError, setPhoneError] = useState("");

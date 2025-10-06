@@ -68,7 +68,7 @@ export default function Navbar() {
             className="text-2xl font-extrabold flex items-center gap-1 tracking-tight text-white hover:text-purple-400 transition-colors"
           >
             <img src="/CreatorhubProfile.png" className="w-10 rounded-full" />
-            Link<span className="text-purple-400">Kr</span>
+            Lynk<span className="text-purple-400">Kr</span>
           </Link>
 
           {/* -------- DESKTOP VIEW -------- */}
